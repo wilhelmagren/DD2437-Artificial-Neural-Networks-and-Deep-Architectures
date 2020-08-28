@@ -31,11 +31,11 @@ def generate_matrices():
 
     input_matrix_X = []
     if bias:
-        input_matrix_X = np.array([np.concatenate(np.concatenate(set_a1, set_a2), np.concatenate(set_b1, set_b2)), np.array([1]*2*n)])
+        input_matrix_X = np.array([np.concatenate(np.concatenate([set_a1, set_a2]), np.concatenate([set_b1, set_b2])), np.array([1]*2*n)])
 
-    input_matrix_X = np.array([np.concatenate(np.concatenate(set_a1, set_a2), np.concatenate(set_b1, set_b2))])
+    input_matrix_X = np.array([np.concatenate(np.concatenate([set_a1, set_a2]), np.concatenate([set_b1, set_b2]))])
     weight_matrix_W = np.random.rand(1,n)
-    target_matrix_T = np.concatenate([0.5]*n, [-0.5]*n)
+    target_matrix_T = np.concatenate([[0.5]*n, [-0.5]*n])
     return input_matrix_X, weight_matrix_W, target_matrix_T
 
 def delta_rule(X,W,t,eta = 0.001):
