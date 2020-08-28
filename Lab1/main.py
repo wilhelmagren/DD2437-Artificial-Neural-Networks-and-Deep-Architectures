@@ -6,7 +6,7 @@ mA = [0.0, 0.5]
 mB = [-0.5, 0.0]
 #if we want to shuffle set it to 1
 shuffle = 0
-bias = 1
+bias = True
 sigmaA = 0.5
 sigmaB = 0.5
 
@@ -30,10 +30,10 @@ def generate_matrices():
         np.random.shuffle(set_b2)
 
     input_matrix_X = []
-    if bias:
-        input_matrix_X = np.array([np.concatenate(np.concatenate([set_a1, set_a2]), np.concatenate([set_b1, set_b2])), np.array([1]*2*n)])
 
-    input_matrix_X = np.array([np.concatenate(np.concatenate([set_a1, set_a2]), np.concatenate([set_b1, set_b2]))])
+    input_matrix_X = np.array([np.concatenate([set_a1, set_a2]), np.concatenate([set_b1, set_b2]), np.array([1] * (2*n))])
+
+    #input_matrix_X = np.array([np.concatenate([set_a1, set_a2]), np.concatenate([set_b1, set_b2])])
     weight_matrix_W = np.random.rand(1,n)
     target_matrix_T = np.concatenate([[0.5]*n, [-0.5]*n])
     return input_matrix_X, weight_matrix_W, target_matrix_T
@@ -53,8 +53,9 @@ def delta_train(X, W, T, epoch):
 Plot the input matrix
 """
 def plot(X):
-    plt.scatter(X[0], X[1])
-
+    plt.scatter(X[0][0],X[1][0])
+    plt.scatter(X[0][1],X[1][1])
+    plt.show()
 """
 Find difference of numbers
 """
@@ -71,4 +72,6 @@ def convergence_check(prev_val, new_val):
 
 X, W, T = generate_matrices()
 plot(X)
+
+
 #delta_train(X,W,T,100)
