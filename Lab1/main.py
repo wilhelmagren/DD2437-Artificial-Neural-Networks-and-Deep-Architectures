@@ -18,9 +18,6 @@ def generate_matrices():
     # set1
     set_a1 = np.random.rand(1,n) * sigmaA + mA[0]
     set_a2 = np.random.rand(1,n) * sigmaA + mA[1]
-    bias_array = []
-    if bias == 1 :
-        bias_array = np.ones(n)
     if shuffle == 1 :
         np.random.shuffle(set_a1)
         np.random.shuffle(set_a2)
@@ -31,14 +28,14 @@ def generate_matrices():
     if shuffle == 1 :
         np.random.shuffle(set_b1)
         np.random.shuffle(set_b2)
-
-    input_matrix_X = np.array([np.concatenate(np.concatenate(set_a1, set_a2), np.concatenate(set_b1, set_b2))])
+    if bias:
+        input_matrix_X = np.array([np.concatenate(np.concatenate(set_a1, set_a2), np.concatenate(set_b1, set_b2)), np.array([1]*n)])
     weight_matrix_W = np.random.rand(1,n)
     target_matrix_T = np.concatenate([0.5]*n, [-0.5]*n)
     return input_matrix_X, weight_matrix_W, target_matrix_T
 
-def delta_rule(X,W,t,lr = 0.001):
-    return -lr*(W@X-t)@np.transpose(X)
+def delta_rule(X,W,t,eta = 0.001):
+    return -eta*(W@X-t)@np.transpose(X)
 
 # Variable to see if we have converged
 convergence = 0
