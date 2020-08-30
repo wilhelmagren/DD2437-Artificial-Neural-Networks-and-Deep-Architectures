@@ -74,6 +74,12 @@ def generate_matrices():
 
 
 def plot_error_over_iterations(err, it):
+    """
+    Func plot_error_over_iterations/2
+    @spec plot_error_over_iterations(list, list) :: void
+        Plots the calculated errors over the corresponding iteration in learning process.
+        Used to visualize the convergence of the error function E.
+    """
     plt.ylim(50, -5)
     # plt.plot(x, y, ...)
     plt.plot(it, err, color="green")
@@ -83,11 +89,11 @@ def plot_error_over_iterations(err, it):
     plt.grid()
     plt.show()
 
+
 def plot_sets(X):
     """
     Func plot_sets/1
     @spec plot_sets(np.array()) :: void
-
         Plots the generated datasets according to matrix
         generation in generate_matrices/0.
     """
@@ -103,7 +109,6 @@ def plot_all(X, W, do_delta, eta=0.001, iteration=0):
     """
     Func plot_all/5
     @spec plot_all(np.array(), np.array(), boolean, integer, integer) :: void
-
         Plots both the perceptron line & both datasets.
         We can find the line due to the following property:
             Wx = 0
@@ -189,7 +194,6 @@ def delta_learning(X, W, T, eta):
         errors.append(new_error)
         iterations.append(iteration)
         iteration += 1
-
 
 
 def perceptron_rule(X, E, eta):
