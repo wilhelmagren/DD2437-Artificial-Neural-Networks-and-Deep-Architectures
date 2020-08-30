@@ -7,6 +7,15 @@ batch mode on the generated dataset. Adjust the learning rate and study
 the convergence of the two algorithms.
 
 Last updated: 30/08/2020
+
+Assignment - Part 1
+    1.  Apply and compare perceptron learning with the Delta learning rule in batch mode.
+        Adjust the learning rate and study the convergence of the two algorithms.
+    
+    2.  Compare sequential to batch learning approach for the Delta rule. 
+        How quickly (in terms of epochs) do the algorithm converge? 
+    
+    3. Remove the bias, train your network with the Delta rule in batch mode and test its behaviour.
 """
 n = 100
 mA = [-1.0, 1.0]
