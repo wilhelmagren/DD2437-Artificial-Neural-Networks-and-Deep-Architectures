@@ -73,6 +73,16 @@ def generate_matrices():
     return X, W, T
 
 
+def plot_error_over_iterations(err, it):
+    plt.ylim(50, -5)
+    # plt.plot(x, y, ...)
+    plt.plot(it, err, color="green")
+    plt.xlabel("Number of iterations")
+    plt.ylabel("Error quota")
+    plt.title("Error quota over number of iterations")
+    plt.grid()
+    plt.show()
+
 def plot_sets(X):
     """
     Func plot_sets/1
@@ -138,7 +148,7 @@ def calculate_error(X, W, T):
         Calculates the difference between our estimate (W@X) and the target value.
         Using np.sum/1 to sum the matrix and get a numerical value.
     """
-    return np.sum((T - W@X) ** 2)
+    return np.sum((T - W@X) ** 2) / 2
 
 
 def delta_rule(X, W, T, eta):
@@ -162,8 +172,10 @@ def delta_learning(X, W, T, eta):
     """
     converged = False
     iteration = 0
+    errors = []
+    iterations = []
     while not converged:
-        # Plot the perceptron line after each 2 iteration
+        # Plot the perceptron line after each 5 iteration
         if (iteration % 5) == 0:
             plot_all(X, W, True, eta, iteration)
 
@@ -173,8 +185,11 @@ def delta_learning(X, W, T, eta):
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
-            return W, iteration
+            return W, iteration, iterations, errors
+        errors.append(new_error)
+        iterations.append(iteration)
         iteration += 1
+
 
 
 def perceptron_rule(X, E, eta):
@@ -201,7 +216,7 @@ def perceptron_learning(X, W, T, eta, num_epoch):
     E = np.zeros([1, 2*n])
     Y = np.zeros([1, 2*n])
     for i in range(num_epoch):
-        # Plot the perceptron line after each 2 iteration
+        # Plot the perceptron line after each 5 iteration
         if (i % 5) == 0:
             plot_all(X, W, False, eta, i)
 
@@ -243,16 +258,17 @@ def perform_delta(X, W, T, eta):
     """
     plot_all(X, W, True, eta)
     print("    |-> starting training...")
-    new_weight, number_of_iterations = delta_learning(X, W, T, eta)
+    new_weight, number_of_iterations, error_list, iteration_list = delta_learning(X, W, T, eta)
     print("    |-> training done.")
     plot_all(X, new_weight, True, eta, number_of_iterations)
+    plot_error_over_iterations(error_list, iteration_list)
 
 
 def main():
-    learning_rate = 0.01
+    learning_rate = 0.001
     X, W, T = generate_matrices()
-    print("err.str\n    |-> performing perceptron learning...")
-    perform_perceptron(X, W, T, learning_rate)
+    # print("err.str\n    |-> performing perceptron learning...")
+    # perform_perceptron(X, W, T, learning_rate)
     print("err.str\n    |-> performing delta learning...")
     perform_delta(X, W, T, learning_rate)
     exit()
