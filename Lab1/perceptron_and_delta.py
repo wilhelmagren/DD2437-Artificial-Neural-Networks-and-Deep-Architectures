@@ -170,7 +170,7 @@ def delta_rule(X, W, T, eta):
 def delta_learning(X, W, T, eta):
     """
     Func delta_learning/3
-    @spec delta_learning(np.array(), np.array(), np.array()) :: np.array()
+    @spec delta_learning(np.array(), np.array(), np.array()) :: np.array(), list, list
         Iteratively calculates the delta_rule on the dataset X, weight matrix W and target matrix T.
         Function will return when the error between W and deltaW converges.
         (See check_convergence/3 for logical expression of convergence)
