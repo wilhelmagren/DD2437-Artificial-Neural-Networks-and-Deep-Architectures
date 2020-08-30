@@ -82,7 +82,7 @@ def plot_sets(X):
     plt.show()
 
 
-def plot_all(X, W):
+def plot_all(X, W, do_delta, eta=0.001, iteration=0):
     """
     Func plot_all/2
     @spec plot_all(np.array(), np.array()) :: void
@@ -94,7 +94,10 @@ def plot_all(X, W):
     """
     plt.scatter(X[0, n:], X[1, n:], color="red")
     plt.scatter(X[0, :n], X[1, :n], color="blue")
-    plt.title("Perceptron learning plot")
+    if do_delta:
+        plt.title(f"Delta rule: eta = {eta}, iteration = {iteration}")
+    else:
+        plt.title(f"Perceptron learning rule: eta = {eta}, iteration = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
     plt.ylim(top = 3, bottom = -3)
@@ -107,7 +110,7 @@ def plot_all(X, W):
     plt.show()
 
 
-def check_convergence(old_error, new_error, diff_threshold = 0.00001):
+def check_convergence(old_error, new_error, diff_threshold=0.001):
     """
     Func check_convergence/3
     @spec check_convergence(np.array(), np.array(), integer) :: boolean
@@ -142,7 +145,7 @@ def delta_rule(X, W, T, eta):
     return -eta*(W@X - T)@np.transpose(X)
 
 
-def delta_learning(X, W, T):
+def delta_learning(X, W, T, eta):
     """
     Func delta_learning/3
     @spec delta_learning(np.array(), np.array(), np.array()) :: np.array()
@@ -153,17 +156,18 @@ def delta_learning(X, W, T):
     converged = False
     iteration = 0
     while not converged:
-        # Plot the perceptron line after each 10 iteration
-        if (iteration % 10) == 0:
-            plot_all(X, W)
+        # Plot the perceptron line after each 2 iteration
+        if (iteration % 2) == 0:
+            plot_all(X, W, True, eta, iteration)
 
         prev_W = W
-        delta_W = delta_rule(X, W, T, 0.001)
+        delta_W = delta_rule(X, W, T, eta)
         W = delta_W + prev_W
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
-            return W
+            return W, iteration
+        iteration += 1
 
 
 def perceptron_rule(X, E, eta):
@@ -179,7 +183,7 @@ def perceptron_rule(X, E, eta):
     return eta*(E@np.transpose(X))
 
 
-def perceptron_learning(X, W, T, num_epoch):
+def perceptron_learning(X, W, T, eta, num_epoch):
     """
     Func perceptron_learning/4
     @spec perceptron_learning(np.array(), np.array(), np.array(), integer) :: np.array()
@@ -190,9 +194,9 @@ def perceptron_learning(X, W, T, num_epoch):
     E = np.zeros([1, 2*n])
     Y = np.zeros([1, 2*n])
     for i in range(num_epoch):
-        # Plot the perceptron line after each 10 iteration
-        if (i % 10) == 0:
-            plot_all(X, W)
+        # Plot the perceptron line after each 2 iteration
+        if (i % 2) == 0:
+            plot_all(X, W, False, eta, i)
 
         # W has dimensions: 1x3, X has dimensions: 3x2n
         #     |-> Y-prime will get dimensions: 1x2n
@@ -203,12 +207,12 @@ def perceptron_learning(X, W, T, num_epoch):
             else:
                 Y[0][j] = 1
             E[0][j] = T[0][j] - Y[0][j]
-        delta_W = perceptron_rule(X, E, 0.001)
+        delta_W = perceptron_rule(X, E, eta)
         W = delta_W + W
     return W
 
 
-def perform_perceptron():
+def perform_perceptron(eta):
     """
     Func perform_perceptron/0
     @spec perform_perceptron() :: void
@@ -216,12 +220,15 @@ def perform_perceptron():
         Number of epochs is equal to: ${see_below}
     """
     input_x, weight, target = generate_matrices()
-    plot_all(input_x, weight)
-    new_weight = perceptron_learning(input_x, weight, target, 100)
-    plot_all(input_x, new_weight)
+    plot_all(input_x, weight, False, eta)
+    num_epochs = 100
+    print(f"    |-> starting training with {num_epochs} number of epochs...")
+    new_weight = perceptron_learning(input_x, weight, target, eta, num_epochs)
+    print("    |-> training done.")
+    plot_all(input_x, new_weight, False, eta, num_epochs)
 
 
-def perform_delta():
+def perform_delta(eta):
     """
     Func perform_delta/0
     @spec perform_delta() :: void
@@ -229,18 +236,21 @@ def perform_delta():
         Terminates when the error converges.
     """
     input_x, weight, target = generate_matrices()
-    plot_all(input_x, weight)
-    new_weight = delta_learning(input_x, weight, target)
-    plot_all(input_x, new_weight)
+    plot_all(input_x, weight, True, eta)
+    print("    |-> starting training...")
+    new_weight, number_of_iterations = delta_learning(input_x, weight, target, eta)
+    print("    |-> training done.")
+    plot_all(input_x, new_weight, True, eta, number_of_iterations)
 
 
-def main(do_perceptron):
-    if do_perceptron:
+def main(do_delta):
+    learning_rate = 0.001
+    if not do_delta:
         print("err.str\n    |-> performing perceptron learning...")
-        perform_perceptron()
+        perform_perceptron(learning_rate)
     else:
         print("err.str\n    |-> performing delta learning...")
-        perform_delta()
+        perform_delta(learning_rate)
 
 
 if __name__ == "__main__":
