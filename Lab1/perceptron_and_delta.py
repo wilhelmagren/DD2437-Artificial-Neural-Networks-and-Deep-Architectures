@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 """
-Apply and compare perceptron learning with the Delta learning rule in 
-batch mode on the generated dataset. Adjust the learning rate and study 
+Apply and compare perceptron learning with the Delta learning rule in
+batch mode on the generated dataset. Adjust the learning rate and study
 the convergence of the two algorithms.
 
 Last updated: 30/08/2020
@@ -11,17 +11,17 @@ Last updated: 30/08/2020
 Assignment - Part 1
     1.  Apply and compare perceptron learning with the Delta learning rule in batch mode.
         Adjust the learning rate and study the convergence of the two algorithms.
-    
-    2.  Compare sequential to batch learning approach for the Delta rule. 
-        How quickly (in terms of epochs) do the algorithm converge? 
-    
+
+    2.  Compare sequential to batch learning approach for the Delta rule.
+        How quickly (in terms of epochs) do the algorithm converge?
+
     3. Remove the bias, train your network with the Delta rule in batch mode and test its behaviour.
 
     1.1 Noteringar & anteckningar.
         -   Vid användning av dataset som är någorlunda svåra att separera så presterar perceptron rule mycket sämmre på LÅGA eta.
             Ibland kan den inte ens dra linjen korrekt. Delta rule fungerar HITTILS på alla dataset som med ögat är uppdelbara för LÅGA eta.
-            
-            Vid testning med eta > 0.001 (prövade med 0.01) så lyckades delta-rule perceptron inte att dra linjen. 
+
+            Vid testning med eta > 0.001 (prövade med 0.01) så lyckades delta-rule perceptron inte att dra linjen.
             Det såg ut som att perceptron rule fungerade bättre på höga eta medan delta-rule fungerar bättre för låga eta.
 """
 n = 100
@@ -46,11 +46,11 @@ def generate_matrices():
     #    |-> Dimensions are: 3x2n
     X = np.ones([3, 2*n])
 
-    # Randomize set_1 both x & y data
+    # Randomize both set_1 and 2 x data
     X[0, :n] = np.random.rand(1, n) * sigmaA + mA[0]
     X[0, n:] = np.random.rand(1, n) * sigmaA + mA[1]
 
-    # Randomize set_2 both x & y data
+    # Randomize both set_1 and 2 y data
     X[1, :n] = np.random.rand(1, n) * sigmaB + mB[0]
     X[1, n:] = np.random.rand(1, n) * sigmaB + mB[1]
 
@@ -83,9 +83,9 @@ def plot_error_over_iterations(err, it):
     plt.ylim(50, -5)
     # plt.plot(x, y, ...)
     plt.plot(it, err, color="green")
-    plt.xlabel("Number of iterations")
+    plt.xlabel("Number of epochs")
     plt.ylabel("Error quota")
-    plt.title("Error quota over number of iterations")
+    plt.title("Error quota over number of epochs")
     plt.grid()
     plt.show()
 
@@ -105,7 +105,7 @@ def plot_sets(X):
     plt.show()
 
 
-def plot_all(X, W, do_delta, eta=0.001, iteration=0):
+def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
     """
     Func plot_all/5
     @spec plot_all(np.array(), np.array(), boolean, integer, integer) :: void
@@ -117,12 +117,15 @@ def plot_all(X, W, do_delta, eta=0.001, iteration=0):
     plt.scatter(X[0, n:], X[1, n:], color="red")
     plt.scatter(X[0, :n], X[1, :n], color="blue")
     if do_delta:
-        plt.title(f"Delta rule: eta = {eta}, epoch = {iteration}")
+        if do_batch:
+            plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
+        else:
+            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch = {iteration}")
     else:
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(top = 3, bottom = -2)
+    plt.ylim(top = 3, bottom = -2.0)
     x = np.linspace(-2, 2, 200)
     bias = W[0][2]
     k = -(bias/W[0][1])/(bias/W[0][0])
@@ -132,7 +135,7 @@ def plot_all(X, W, do_delta, eta=0.001, iteration=0):
     plt.show()
 
 
-def check_convergence(old_error, new_error, diff_threshold=0.001):
+def check_convergence(old_error, new_error, diff_threshold=0.00000001):
     """
     Func check_convergence/3
     @spec check_convergence(np.array(), np.array(), integer) :: boolean
@@ -181,12 +184,13 @@ def delta_learning(X, W, T, eta):
     iterations = []
     while not converged:
         # Plot the perceptron line after each 5 iteration
-        if (iteration % 5) == 0:
-            plot_all(X, W, True, eta, iteration)
+        #if (iteration % 5) == 0:
+        #    plot_all(X, W, True, eta, iteration)
 
         prev_W = W
         delta_W = delta_rule(X, W, T, eta)
         W = delta_W + prev_W
+        print(W)
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
@@ -194,6 +198,34 @@ def delta_learning(X, W, T, eta):
         errors.append(new_error)
         iterations.append(iteration)
         iteration += 1
+
+
+def delta_sequential_learning(X, W, T, eta):
+    """
+    w@x_column will yield 1x3*3x1 matrix -> 1x1 value
+    """
+    iteration = 0
+    errors = []
+    iterations = []
+    while True:
+        # Plot the perceptron line after each 5 iteration
+        #if (iteration % 2) == 0:
+            #plot_all(X, W, True, eta, iteration)
+        iteration += 1
+        prev_error = calculate_error(X, W, T)
+        for column in range(2*n):
+            prev_W = W
+            column_x = np.ones([3, 1])
+            column_x[0][0] = X[0][column]
+            column_x[1][0] = X[1][column]
+            column_x[2][0] = X[2][column]
+            W = prev_W + -eta*(W@column_x - T[0][column])*np.transpose(column_x)
+        
+        new_error = calculate_error(X, W, T)
+        errors.append(new_error)
+        iterations.append(iteration)
+        if check_convergence(prev_error, new_error):
+            return W, iteration, iterations, errors
 
 
 def perceptron_rule(X, E, eta):
@@ -221,8 +253,8 @@ def perceptron_learning(X, W, T, eta, num_epoch):
     Y = np.zeros([1, 2*n])
     for i in range(num_epoch):
         # Plot the perceptron line after each 5 iteration
-        if (i % 5) == 0:
-            plot_all(X, W, False, eta, i)
+        #if (i % 5) == 0:
+        #    plot_all(X, W, False, eta, i)
 
         # W has dimensions: 1x3, X has dimensions: 3x2n
         #     |-> Y-prime will get dimensions: 1x2n
@@ -245,36 +277,43 @@ def perform_perceptron(X, W, T, eta):
         Trains the perceptron using perceptron learning rule.
         Number of epochs is equal to: ${see_below}
     """
-    plot_all(X, W, False, eta)
     num_epochs = 100
+    plot_all(X, W, False, False, eta, num_epochs)
     print(f"    |-> starting training with {num_epochs} number of epochs...")
     new_weight = perceptron_learning(X, W, T, eta, num_epochs)
     print("    |-> training done.")
-    plot_all(X, new_weight, False, eta, num_epochs)
+    plot_all(X, new_weight, False, False, eta, num_epochs)
 
 
-def perform_delta(X, W, T, eta):
+def perform_delta(X, W, T, eta, do_batch):
     """
     Func perform_delta/0
     @spec perform_delta() :: void
         Trains the perceptron the delta rule.
         Terminates when the error converges.
     """
-    plot_all(X, W, True, eta)
     print("    |-> starting training...")
-    new_weight, number_of_iterations, error_list, iteration_list = delta_learning(X, W, T, eta)
+    if do_batch:
+        plot_all(X, W, True, True, eta)
+        new_weight, number_of_iterations, error_list, iteration_list = delta_learning(X, W, T, eta)
+        plot_all(X, new_weight, True, True, eta, number_of_iterations)
+        plot_error_over_iterations(error_list, iteration_list)
+    else:
+        plot_all(X, W, True, False, eta)
+        new_weight, number_of_iterations, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
+        plot_all(X, new_weight, True, False, eta, number_of_iterations)
+        plot_error_over_iterations(error_list, iteration_list)
     print("    |-> training done.")
-    plot_all(X, new_weight, True, eta, number_of_iterations)
-    plot_error_over_iterations(error_list, iteration_list)
-
 
 def main():
-    learning_rate = 0.001
+    learning_rate = 0.0001
     X, W, T = generate_matrices()
     # print("err.str\n    |-> performing perceptron learning...")
     # perform_perceptron(X, W, T, learning_rate)
-    print("err.str\n    |-> performing delta learning...")
-    perform_delta(X, W, T, learning_rate)
+    print("err.str\n    |-> performing delta batch learning...")
+    perform_delta(X, W, T, learning_rate, True)
+    print("err.str\n    |-> performing delta sequential learning...")
+    perform_delta(X, W, T, learning_rate, False)
     exit()
 
 
