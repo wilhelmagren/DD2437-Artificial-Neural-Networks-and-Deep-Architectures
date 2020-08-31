@@ -29,7 +29,7 @@ mA = [-2.0, 1.0]
 mB = [-1.0, 0.0]
 sigmaA = 2
 sigmaB = 2
-use_bias = True
+use_bias = False
 
 
 def generate_matrices():
@@ -44,7 +44,12 @@ def generate_matrices():
     """
     # Bias is the third row in X.
     #    |-> Dimensions are: 3x2n
-    X = np.ones([3, 2*n])
+    X = []
+    if use_bias:
+        X = np.ones([3, 2*n])
+        X[2, :2 * n] = 1
+    else:
+        X = np.ones([2,2*n])
 
     # Randomize both set_1 and 2 x data
     X[0, :n] = np.random.rand(1, n) * sigmaA + mA[0]
@@ -54,8 +59,8 @@ def generate_matrices():
     X[1, :n] = np.random.rand(1, n) * sigmaB + mB[0]
     X[1, n:] = np.random.rand(1, n) * sigmaB + mB[1]
 
-    # Set the bias
-    X[2, :2*n] = 1 if use_bias else 0
+
+
 
     # Weight matrix generation works (Also with bias)
     # X.shape[0] gives it the same dimensions as the number of rows in X
@@ -63,7 +68,8 @@ def generate_matrices():
     W = np.array([np.random.normal(0, 1, X.shape[0])])
 
     # Placing the bias in the last spot of the weight matrix W yields the correct delta_W
-    W[0][2] = 1.0
+    if use_bias:
+        W[0][2] = 1.0
 
     # Target matrix generation is correct.
     #     |-> the dimensions are 1x2n
@@ -127,10 +133,16 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
     plt.ylabel("y")
     plt.ylim(top = 3, bottom = -2.0)
     x = np.linspace(-2, 2, 200)
-    bias = W[0][2]
-    k = -(bias/W[0][1])/(bias/W[0][0])
-    m = -bias/W[0][1]
-    y = k*x + m
+    y = 0
+    if use_bias:
+        bias = W[0][2]
+        k = -(bias/W[0][1])/(bias/W[0][0])
+        m = -bias/W[0][1]
+        y = k*x + m
+    else:
+        """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
+        k = W[0][1]/W[0][0]
+        y = k*x
     plt.plot(x, y, color="green")
     plt.show()
 
@@ -186,7 +198,6 @@ def delta_learning(X, W, T, eta):
         # Plot the perceptron line after each 5 iteration
         #if (iteration % 5) == 0:
         #    plot_all(X, W, True, eta, iteration)
-
         prev_W = W
         delta_W = delta_rule(X, W, T, eta)
         W = delta_W + prev_W
@@ -306,14 +317,14 @@ def perform_delta(X, W, T, eta, do_batch):
     print("    |-> training done.")
 
 def main():
-    learning_rate = 0.0001
+    learning_rate = 0.001
     X, W, T = generate_matrices()
     # print("err.str\n    |-> performing perceptron learning...")
     # perform_perceptron(X, W, T, learning_rate)
     print("err.str\n    |-> performing delta batch learning...")
     perform_delta(X, W, T, learning_rate, True)
     print("err.str\n    |-> performing delta sequential learning...")
-    perform_delta(X, W, T, learning_rate, False)
+    #perform_delta(X, W, T, learning_rate, False)
     exit()
 
 
