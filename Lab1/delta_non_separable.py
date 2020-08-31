@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 use_bias = True
 ndata = 100
@@ -7,7 +8,7 @@ n = 100
 def generate_overlap_matrices():
 
     mA = [-0.5, 0.3]
-    mB = [-1.0, 0.0]
+    mB = [1.0, 0.0]
     sigmaA = 2
     sigmaB = 2
 
@@ -58,10 +59,10 @@ def generate_overlap_matrices():
 
 
 
-def generate_matrices():
+def generate_matrices_25():
 
     mA = [1.0, 0.3]
-    mB = [0.0, 0.5]
+    mB = [0.0, 0.0]
     sigmaA = 0.2
     sigmaB = 0.3
     X = np.zeros([3, ndata * 2])
@@ -77,8 +78,141 @@ def generate_matrices():
     X[1, :ndata] = np.random.rand(1, ndata) * sigmaB + mB[1]
     X[1, ndata:] = np.random.rand(1, ndata) * sigmaB + mA[1]
     X[2,:2*ndata] = 1
-    return X
 
+    # Weight matrix generation works (Also with bias)
+    # X.shape[0] gives it the same dimensions as the number of rows in X
+    #     |-> the dimensions are 1x3
+    W = np.array([np.random.normal(0, 1, X.shape[0])])
+
+    # Placing the bias in the last spot of the weight matrix W yields the correct delta_W
+    if use_bias:
+        W[0][2] = 1.0
+
+    # Target matrix generation is correct.
+    #     |-> the dimensions are 1x2n
+    T = np.ones([1, 150])
+    T[0, :75] = -1
+    index_i = 0
+    index_j = 0
+    rand_matrix_25 = np.ones([3,150])
+    count = 0
+    for i in range(0,75):
+        if random.randint(0,1) == 0:
+            count += 1
+    if count < 25 :
+        count = 25
+    if count > 50:
+        count = 50
+    otherpart = 75-count
+
+    rand_matrix_25[0, :count] = X[0, :count]
+    otherpart_XD = otherpart + 50
+    rand_matrix_25[0, count:75] = X[0, 50:otherpart_XD]
+    rand_matrix_25[1, :count] = X[1, :count]
+    rand_matrix_25[1, count:75] = X[1, 50:otherpart_XD]
+
+    rand_matrix_25[0, 75:] = X[0, 100:175]
+    rand_matrix_25[1, 75:] = X[1, 100:175]
+    # Plot the generated data sets found in X
+    return rand_matrix_25, W, T
+
+def generate_matrices_50_BLUEDABADEBA():
+
+    mA = [1.0, 0.3]
+    mB = [0.0, 0.0]
+    sigmaA = 0.2
+    sigmaB = 0.3
+    X = np.zeros([3, ndata * 2])
+    nhalf = int(ndata / 2)
+    """splits data in to non linearly sets
+    First row = """
+
+    X[0,:nhalf] = np.random.rand(1,round(0.5*ndata)) * sigmaA - mA[0]
+    X[0,nhalf:ndata] = np.random.rand(1,round(0.5*ndata)) * sigmaA + mA[0]
+
+    X[0,ndata:2*ndata] = np.random.rand(1,ndata) * sigmaB + mB[0];
+
+    X[1, :ndata] = np.random.rand(1, ndata) * sigmaB + mB[1]
+    X[1, ndata:] = np.random.rand(1, ndata) * sigmaB + mA[1]
+    X[2,:2*ndata] = 1
+
+    # Weight matrix generation works (Also with bias)
+    # X.shape[0] gives it the same dimensions as the number of rows in X
+    #     |-> the dimensions are 1x3
+    W = np.array([np.random.normal(0, 1, X.shape[0])])
+
+    # Placing the bias in the last spot of the weight matrix W yields the correct delta_W
+    if use_bias:
+        W[0][2] = 1.0
+
+    # Target matrix generation is correct.
+    #     |-> the dimensions are 1x2n
+    T = np.ones([1, 150])
+    T[0, :75] = -1
+    index_i = 0
+    index_j = 0
+    rand_matrix_25 = np.ones([3,150])
+    count = 0
+    for i in range(0,50):
+        if random.randint(0,1) == 0:
+            count += 1
+    otherpart = 50-count
+
+    rand_matrix_25[0, :count] = X[0, :count]
+    otherpart_XD = otherpart + 50
+    rand_matrix_25[0, count:50] = X[0, 50:otherpart_XD]
+    rand_matrix_25[1, :count] = X[1, :count]
+    rand_matrix_25[1, count:50] = X[1, 50:otherpart_XD]
+
+    rand_matrix_25[0, 50:] = X[0, 100:200]
+    rand_matrix_25[1, 50:] = X[1, 100:200]
+    # Plot the generated data sets found in X
+    return rand_matrix_25, W, T
+
+def generate_matrices_50_redd():
+
+    mA = [1.0, 0.3]
+    mB = [0.0, 0.0]
+    sigmaA = 0.2
+    sigmaB = 0.3
+    X = np.zeros([3, ndata * 2])
+    nhalf = int(ndata / 2)
+    """splits data in to non linearly sets
+    First row = """
+
+    X[0,:nhalf] = np.random.rand(1,round(0.5*ndata)) * sigmaA - mA[0]
+    X[0,nhalf:ndata] = np.random.rand(1,round(0.5*ndata)) * sigmaA + mA[0]
+
+    X[0,ndata:2*ndata] = np.random.rand(1,ndata) * sigmaB + mB[0];
+
+    X[1, :ndata] = np.random.rand(1, ndata) * sigmaB + mB[1]
+    X[1, ndata:] = np.random.rand(1, ndata) * sigmaB + mA[1]
+    X[2,:2*ndata] = 1
+
+    # Weight matrix generation works (Also with bias)
+    # X.shape[0] gives it the same dimensions as the number of rows in X
+    #     |-> the dimensions are 1x3
+    W = np.array([np.random.normal(0, 1, X.shape[0])])
+
+    # Placing the bias in the last spot of the weight matrix W yields the correct delta_W
+    if use_bias:
+        W[0][2] = 1.0
+
+    # Target matrix generation is correct.
+    #     |-> the dimensions are 1x2n
+    T = np.ones([1, 150])
+    T[0, :75] = -1
+    index_i = 0
+    index_j = 0
+    rand_matrix_25 = np.ones([3,150])
+
+    rand_matrix_25[0, :100] = X[0, :100]
+    rand_matrix_25[1, :100] = X[1, :100]
+
+    rand_matrix_25[0, 100:] = X[0, 100:150]
+    rand_matrix_25[1, 100:] = X[1, 100:150]
+    # Plot the generated data sets found in X
+    return rand_matrix_25, W, T
 
 def plot_error_over_iterations(err, it):
     """
@@ -121,8 +255,8 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
             Wx = 0
             which in our case means: w0 + w1x1 + w2x2 = 0
     """
-    plt.scatter(X[0, n:], X[1, n:], color="red")
-    plt.scatter(X[0, :n], X[1, :n], color="blue")
+    plt.scatter(X[0, 100:], X[1, 100:], color="red")
+    plt.scatter(X[0, :100], X[1, :100], color="blue")
     if do_delta:
         if do_batch:
             plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
@@ -132,8 +266,8 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(top=3, bottom=-2.0)
-    x = np.linspace(-2, 2, 200)
+    plt.ylim(top=1, bottom=-1.0)
+    x = np.linspace(-1, 1, 200)
     y = 0
     if use_bias:
         bias = W[0][2]
@@ -142,7 +276,7 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         y = k * x + m
     else:
         """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
-        k = W[0][0] / W[0][1]
+        k = W[0][1] / W[0][0]
         y = k * x
     plt.plot(x, y, color="green")
     plt.show()
@@ -319,14 +453,14 @@ def perform_delta(X, W, T, eta, do_batch):
 
 
 def main():
-    learning_rate = 0.0005
+    learning_rate = 0.001
     #X, W, T = generate_matrices()
-    X,W,T = generate_overlap_matrices()
+    X,W,T = generate_matrices_50_redd()
     # print("err.str\n    |-> performing perceptron learning...")
-    perform_perceptron(X, W, T, learning_rate)
+    #perform_perceptron(X, W, T, learning_rate)
     print("err.str\n    |-> performing delta batch learning...")
     perform_delta(X, W, T, learning_rate, True)
-    print("err.str\n    |-> performing delta sequential learning...")
+    #print("err.str\n    |-> performing delta sequential learning...")
     #perform_delta(X, W, T, learning_rate, False)
     exit()
 
