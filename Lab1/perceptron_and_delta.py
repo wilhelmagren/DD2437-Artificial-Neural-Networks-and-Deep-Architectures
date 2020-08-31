@@ -23,13 +23,21 @@ Assignment - Part 1
 
             Vid testning med eta > 0.001 (prövade med 0.01) så lyckades delta-rule perceptron inte att dra linjen.
             Det såg ut som att perceptron rule fungerade bättre på höga eta medan delta-rule fungerar bättre för låga eta.
+    
+    1.2 Noteringar & anteckningar.
+        -   Vår hypotes är att batch learning konvergerar någorlunda snabbare än sequential learning. Detta påvisas
+            tydligare för större eta.
+
+    1.3 Noteringar & anteckningar.
+        -   Delta rule lyckas dela in två set som är separerbara av en linje som går igenom origo. Detta
+            innebär att vi behöver sätta mA[] & mB[] så att offsetten för de två setten gör att dom inte ligger allt för nära omkring origo.
 """
 n = 100
-mA = [-2.0, 1.0]
-mB = [-1.0, 0.0]
-sigmaA = 2
-sigmaB = 2
-use_bias = False
+mA = [0.5, -0.5]
+mB = [0.2, -0.7]
+sigmaA = 0.5
+sigmaB = 0.5
+use_bias = True
 
 
 def generate_matrices():
@@ -126,13 +134,13 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         if do_batch:
             plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
         else:
-            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch = {iteration}")
+            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch*num_iterations = {iteration*2*n}")
     else:
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(top = 3, bottom = -2.0)
-    x = np.linspace(-2, 2, 200)
+    plt.ylim(top = 1, bottom = -1.0)
+    x = np.linspace(-1, 1, 200)
     y = 0
     if use_bias:
         bias = W[0][2]
@@ -141,7 +149,7 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         y = k*x + m
     else:
         """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
-        k = W[0][1]/W[0][0]
+        k = W[0][0]/W[0][1]
         y = k*x
     plt.plot(x, y, color="green")
     plt.show()
@@ -201,7 +209,6 @@ def delta_learning(X, W, T, eta):
         prev_W = W
         delta_W = delta_rule(X, W, T, eta)
         W = delta_W + prev_W
-        print(W)
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
@@ -324,7 +331,7 @@ def main():
     print("err.str\n    |-> performing delta batch learning...")
     perform_delta(X, W, T, learning_rate, True)
     print("err.str\n    |-> performing delta sequential learning...")
-    #perform_delta(X, W, T, learning_rate, False)
+    perform_delta(X, W, T, learning_rate, False)
     exit()
 
 
