@@ -138,6 +138,7 @@ def plot_error_over_iterations(err, it):
 
 
 def plot_sets(X):
+
     """
     Func plot_sets/1
     @spec plot_sets(np.array()) :: void
