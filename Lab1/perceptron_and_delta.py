@@ -33,11 +33,11 @@ Assignment - Part 1
             innebär att vi behöver sätta mA[] & mB[] så att offsetten för de två setten gör att dom inte ligger allt för nära omkring origo.
 """
 n = 100
-mA = [0.5, -0.5]
-mB = [0.2, -0.7]
+mA = [2.0, -0.25]
+mB = [2.0, -0.25]
 sigmaA = 0.5
 sigmaB = 0.5
-use_bias = True
+use_bias = False
 
 
 def generate_matrices():
@@ -173,7 +173,7 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(top = 1, bottom = -1.0)
+    plt.ylim(top = 3, bottom = -3.0)
     x = np.linspace(-1, 1, 200)
     y = 0
     if use_bias:
@@ -362,13 +362,15 @@ def perform_delta(X, W, T, eta, do_batch):
 def main():
     learning_rate = 0.001
     X, W, T = generate_matrices()
+    print(X)
+    print(W)
     # print("err.str\n    |-> performing perceptron learning...")
     # perform_perceptron(X, W, T, learning_rate)
     print("err.str\n    |-> performing delta batch learning...")
     err_batch = perform_delta(X, W, T, learning_rate, True)
-    print("err.str\n    |-> performing delta sequential learning...")
-    err_seq = perform_delta(X, W, T, learning_rate, False)
-    plot_error_diff(err_batch, err_seq)
+    #print("err.str\n    |-> performing delta sequential learning...")
+    #err_seq = perform_delta(X, W, T, learning_rate, False)
+    #plot_error_diff(err_batch, err_seq)
     exit()
 
 

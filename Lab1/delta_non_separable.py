@@ -504,8 +504,6 @@ def main():
     perform_delta(X, W, T, learning_rate, True)
     #print("err.str\n    |-> performing delta sequential learning...")
     #perform_delta(X, W, T, learning_rate, False)
-
-
     exit()
 
 
