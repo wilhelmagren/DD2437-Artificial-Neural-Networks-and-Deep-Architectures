@@ -223,6 +223,8 @@ def plot_error_over_iterations(err, it):
     """
     plt.ylim(50, -5)
     # plt.plot(x, y, ...)
+    print(len(err))
+    print(len(it))
     plt.plot(it, err, color="green")
     plt.xlabel("Number of epochs")
     plt.ylabel("Error quota")
@@ -231,20 +233,54 @@ def plot_error_over_iterations(err, it):
     plt.show()
 
 
-def plot_sets(X):
+def plot_sets(X,W, do_delta, do_batch, eta=0.001, iteration=0):
     """
-    Func plot_sets/1
-    @spec plot_sets(np.array()) :: void
-        Plots the generated datasets according to matrix
-        generation in generate_matrices/0.
+    Func plot_all/5
+    @spec plot_all(np.array(), np.array(), boolean, integer, integer) :: void
+        Plots both the perceptron line & both datasets.
+        We can find the line due to the following property:
+            Wx = 0
+            which in our case means: w0 + w1x1 + w2x2 = 0
     """
-    plt.scatter(X[0, n:], X[1, n:], color="red")
-    plt.scatter(X[0, :n], X[1, :n], color="blue")
-    plt.title("Perceptron learning plot")
+
+    plt.scatter(X[0,75:], X[1, 75:], color="red")
+    plt.scatter(X[0, :75], X[1, :75], color="blue")
+    if do_delta:
+        if do_batch:
+            plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
+        else:
+            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch = {iteration}")
+    else:
+        plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
+    plt.ylim(top=1, bottom=-1.0)
+    x = np.linspace(-1, 1, 200)
+    y = 0
+    if use_bias:
+        bias = W[0][2]
+        k = -(bias / W[0][1]) / (bias / W[0][0])
+        m = -bias / W[0][1]
+        y = k * x + m
+    else:
+        """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
+        k = W[0][1] / W[0][0]
+        y = k * x
+    plt.plot(x, y, color="green")
     plt.show()
 
+def calc_accuracy(X,W,T):
+    # T - y if om T == y count++ och accuracy = count/total_tries
+    #Prediction
+    y_prime = W@X
+    count = 0
+    #print(len(T[0]))
+    for i in range(150):
+        if y_prime[0][i] > 0 and T[0][i] == 1:
+            count += 1
+        if y_prime[0][i] < 0 and T[0][i] ==-1:
+            count += 1
+    return count
 
 def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
     """
@@ -255,8 +291,8 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
             Wx = 0
             which in our case means: w0 + w1x1 + w2x2 = 0
     """
-    plt.scatter(X[0, 100:], X[1, 100:], color="red")
-    plt.scatter(X[0, :100], X[1, :100], color="blue")
+    plt.scatter(X[0, n:], X[1, n:], color="red")
+    plt.scatter(X[0, :n], X[1, :n], color="blue")
     if do_delta:
         if do_batch:
             plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
@@ -329,6 +365,8 @@ def delta_learning(X, W, T, eta):
     iteration = 0
     errors = []
     iterations = []
+    acc = []
+
     while not converged:
         # Plot the perceptron line after each 5 iteration
         # if (iteration % 5) == 0:
@@ -336,11 +374,12 @@ def delta_learning(X, W, T, eta):
         prev_W = W
         delta_W = delta_rule(X, W, T, eta)
         W = delta_W + prev_W
-        print(delta_W)
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
-            return W, iteration, iterations, errors
+            return W, iteration, iterations, errors, acc
+        print(calc_accuracy(X,W,T))
+        acc.append(calc_accuracy(X, W, T))
         errors.append(new_error)
         iterations.append(iteration)
         iteration += 1
@@ -440,10 +479,13 @@ def perform_delta(X, W, T, eta, do_batch):
     """
     print("    |-> starting training...")
     if do_batch:
-        plot_all(X, W, True, True, eta)
-        new_weight, number_of_iterations, error_list, iteration_list = delta_learning(X, W, T, eta)
-        plot_all(X, new_weight, True, True, eta, number_of_iterations)
+       # plot_all(X, W, True, True, eta)
+        plot_sets(X, W, True, True, eta)
+        new_weight, number_of_iterations, error_list, iteration_list,accuracy_list = delta_learning(X, W, T, eta)
+        #plot_all(X, new_weight, True, True, eta, number_of_iterations)
+        plot_sets(X, new_weight, True, True, eta, number_of_iterations)
         plot_error_over_iterations(error_list, iteration_list)
+        plot_error_over_iterations(accuracy_list,iteration_list)
     else:
         plot_all(X, W, True, False, eta)
         new_weight, number_of_iterations, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
@@ -455,13 +497,15 @@ def perform_delta(X, W, T, eta, do_batch):
 def main():
     learning_rate = 0.001
     #X, W, T = generate_matrices()
-    X,W,T = generate_matrices_50_redd()
+    X,W,T = generate_matrices_25()
     # print("err.str\n    |-> performing perceptron learning...")
     #perform_perceptron(X, W, T, learning_rate)
     print("err.str\n    |-> performing delta batch learning...")
     perform_delta(X, W, T, learning_rate, True)
     #print("err.str\n    |-> performing delta sequential learning...")
     #perform_delta(X, W, T, learning_rate, False)
+
+
     exit()
 
 
