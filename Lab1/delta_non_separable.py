@@ -39,9 +39,6 @@ def generate_overlap_matrices():
     X[1, :n] = np.random.rand(1, n) * sigmaB + mB[0]
     X[1, n:] = np.random.rand(1, n) * sigmaB + mB[1]
 
-
-
-
     # Weight matrix generation works (Also with bias)
     # X.shape[0] gives it the same dimensions as the number of rows in X
     #     |-> the dimensions are 1x3
@@ -57,7 +54,6 @@ def generate_overlap_matrices():
 
     # Plot the generated data sets found in X
     return X, W, T
-
 
 
 def generate_matrices_25():
@@ -117,6 +113,7 @@ def generate_matrices_25():
     # Plot the generated data sets found in X
     return rand_matrix_25, W, T
 
+
 def generate_matrices_50_BLUEDABADEBA():
 
     mA = [1.0, 0.3]
@@ -170,6 +167,7 @@ def generate_matrices_50_BLUEDABADEBA():
     # Plot the generated data sets found in X
     return rand_matrix_25, W, T
 
+
 def generate_matrices_50_redd():
 
     mA = [1.0, 0.3]
@@ -216,9 +214,56 @@ def generate_matrices_50_redd():
     return rand_matrix_25, W, T
 
 
+def generate_matrices_20_80_BLUE():
+
+    mA = [1.0, 0.3]
+    mB = [0.0, 0.0]
+    sigmaA = 0.2
+    sigmaB = 0.3
+    X = np.zeros([3, ndata * 2])
+    nhalf = int(ndata / 2)
+    """splits data in to non linearly sets
+    First row = """
+
+    X[0,:nhalf] = np.random.rand(1,round(0.5*ndata)) * sigmaA - mA[0]
+    X[0,nhalf:ndata] = np.random.rand(1,round(0.5*ndata)) * sigmaA + mA[0]
+
+    X[0,ndata:2*ndata] = np.random.rand(1,ndata) * sigmaB + mB[0];
+
+    X[1, :ndata] = np.random.rand(1, ndata) * sigmaB + mB[1]
+    X[1, ndata:] = np.random.rand(1, ndata) * sigmaB + mA[1]
+    X[2,:2*ndata] = 1
+
+    # Weight matrix generation works (Also with bias)
+    # X.shape[0] gives it the same dimensions as the number of rows in X
+    #     |-> the dimensions are 1x3
+    W = np.array([np.random.normal(0, 1, X.shape[0])])
+
+    # Placing the bias in the last spot of the weight matrix W yields the correct delta_W
+    if use_bias:
+        W[0][2] = 1.0
+
+    # Target matrix generation is correct.
+    #     |-> the dimensions are 1x2n
+    T = np.ones([1, 150])
+    T[0, :75] = -1
+    index_i = 0
+    index_j = 0
+    rand_matrix_25 = np.ones([3,150])
+
+    rand_matrix_25[0, :40] = X[0, :40]
+    rand_matrix_25[0, 40:50] = X[0, 50:60]
+    rand_matrix_25[1, :40] = X[1, :40]
+    rand_matrix_25[1, 40:50] = X[1, 50:60]
+
+    rand_matrix_25[0, 50:] = X[0, 100:200]
+    rand_matrix_25[1, 50:] = X[1, 100:200]
+    # Plot the generated data sets found in X
+    return rand_matrix_25, W, T
+
 def main():
     learning_rate = 0.001
-    X, W, T = generate_matrices_25()
+    X, W, T = generate_matrices_20_80_BLUE()
     print("err.str\n    |-> performing perceptron learning...")
     perceptron_weight, perceptron_acc = pad.perform_perceptron(X, W, T, learning_rate, True)
     print("err.str\n    |-> performing delta batch learning...")

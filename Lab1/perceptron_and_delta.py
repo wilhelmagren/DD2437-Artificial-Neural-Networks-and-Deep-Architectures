@@ -154,8 +154,8 @@ def plot_sets(X, W, do_delta, do_batch, eta=0.001, iteration=0):
             which in our case means: w0 + w1x1 + w2x2 = 0
     """
 
-    plt.scatter(X[0, :75], X[1, :75], color="blue")
-    plt.scatter(X[0, 75:], X[1, 75:], color="red")
+    plt.scatter(X[0, :50], X[1, :50], color="blue")
+    plt.scatter(X[0, 50:], X[1, 50:], color="red")
     if do_delta:
         if do_batch:
             plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
@@ -165,7 +165,7 @@ def plot_sets(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(top=1, bottom=-0.5)
+    plt.ylim(top=1.0, bottom=0.0)
     x = np.linspace(-1, 1, 200)
     y = 0
     if use_bias:
