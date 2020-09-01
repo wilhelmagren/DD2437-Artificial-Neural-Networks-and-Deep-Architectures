@@ -270,7 +270,7 @@ def delta_sequential_learning(X, W, T, eta):
             column_x[0][0] = X[0][column]
             column_x[1][0] = X[1][column]
             column_x[2][0] = X[2][column]
-            W = prev_W + -eta*(W@column_x - T[0][column])*np.transpose(column_x)    
+            W = prev_W + -eta*(W@column_x - T[0][column])*np.transpose(column_x)
         
         new_error = calculate_error(X, W, T)
         errors.append(new_error)
