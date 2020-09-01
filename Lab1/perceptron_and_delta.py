@@ -33,11 +33,11 @@ Assignment - Part 1
             innebär att vi behöver sätta mA[] & mB[] så att offsetten för de två setten gör att dom inte ligger allt för nära omkring origo.
 """
 n = 100
-mA = [2.0, -0.25]
-mB = [2.0, -0.25]
+mA = [0.5, -0.5]
+mB = [0.5, -0.5]
 sigmaA = 0.5
 sigmaB = 0.5
-use_bias = False
+use_bias = True
 
 
 def generate_matrices():
@@ -67,9 +67,6 @@ def generate_matrices():
     X[1, :n] = np.random.rand(1, n) * sigmaB + mB[0]
     X[1, n:] = np.random.rand(1, n) * sigmaB + mB[1]
 
-
-
-
     # Weight matrix generation works (Also with bias)
     # X.shape[0] gives it the same dimensions as the number of rows in X
     #     |-> the dimensions are 1x3
@@ -86,7 +83,8 @@ def generate_matrices():
     # Plot the generated data sets found in X
     return X, W, T
 
-def plot_error_diff(batch, seq):
+
+def plot_diff(batch, seq):
     """
     Func plot_error_diff/2
     @spec plot_error_diff(list, list) :: void
@@ -105,20 +103,29 @@ def plot_error_diff(batch, seq):
         mod_batch = []
         for i in range(num_iterations):
             mod_batch.append(batch[i])
-        plt.plot(iterations, mod_batch, color="red")
-        plt.plot(iterations, seq, color="blue")
+        plt.plot(iterations, mod_batch, color="red", label="test perc")
+        plt.plot(iterations, seq, color="blue", label="test delta")
+        plt.legend()
+        plt.xlabel("Number of iterations")
+        plt.ylabel("Correctly classified data samples")
+        plt.title("Accuracy of delta rule & perceptron learning")
+        plt.grid()
+        plt.show()
+        exit()
     else:
         plt.plot(iterations, batch, color="red")
         mod_seq = []
         for i in range(num_iterations):
             mod_seq.append(seq[i])
         plt.plot(iterations, mod_seq, color="blue")
+        plt.legend()
+        plt.xlabel("Number of iterations")
+        plt.ylabel("Correctly classified data samples")
+        plt.title("Accuracy of delta rule & perceptron learning")
+        plt.grid()
+        plt.show()
+        exit()
 
-    plt.xlabel("Number of iterations")
-    plt.ylabel("Error quota")
-    plt.title("Difference of error quota between learning methods")
-    plt.grid()
-    plt.show()
 
 def plot_error_over_iterations(err, it):
     """
@@ -137,26 +144,47 @@ def plot_error_over_iterations(err, it):
     plt.show()
 
 
-def plot_sets(X):
+def plot_sets(X, W, do_delta, do_batch, eta=0.001, iteration=0):
+    """
+    Func plot_all/6
+    @spec plot_all(np.array(), np.array(), boolean, boolean, integer, integer) :: void
+        Plots both the perceptron line & both datasets.
+        We can find the line due to the following property:
+            Wx = 0
+            which in our case means: w0 + w1x1 + w2x2 = 0
+    """
 
-    """
-    Func plot_sets/1
-    @spec plot_sets(np.array()) :: void
-        Plots the generated datasets according to matrix
-        generation in generate_matrices/0.
-    """
-    plt.scatter(X[0, n:], X[1, n:], color="red")
-    plt.scatter(X[0, :n], X[1, :n], color="blue")
-    plt.title("Perceptron learning plot")
+    plt.scatter(X[0, :75], X[1, :75], color="blue")
+    plt.scatter(X[0, 75:], X[1, 75:], color="red")
+    if do_delta:
+        if do_batch:
+            plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
+        else:
+            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch = {iteration}")
+    else:
+        plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
+    plt.ylim(top=1, bottom=-0.5)
+    x = np.linspace(-1, 1, 200)
+    y = 0
+    if use_bias:
+        bias = W[0][2]
+        k = -(bias / W[0][1]) / (bias / W[0][0])
+        m = -bias / W[0][1]
+        y = k * x + m
+    else:
+        """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
+        k = W[0][1] / W[0][0]
+        y = k * x
+    plt.plot(x, y, color="green")
     plt.show()
 
 
 def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
     """
-    Func plot_all/5
-    @spec plot_all(np.array(), np.array(), boolean, integer, integer) :: void
+    Func plot_all/6
+    @spec plot_all(np.array(), np.array(), boolean, boolean, integer, integer) :: void
         Plots both the perceptron line & both datasets.
         We can find the line due to the following property:
             Wx = 0
@@ -173,8 +201,8 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylim(top = 3, bottom = -3.0)
-    x = np.linspace(-1, 1, 200)
+    plt.ylim(top = 1.5, bottom = -1.5)
+    x = np.linspace(-2, 2, 200)
     y = 0
     if use_bias:
         bias = W[0][2]
@@ -203,6 +231,29 @@ def check_convergence(old_error, new_error, diff_threshold=0.00000001):
     return False
 
 
+def calc_accuracy(X, W, T, non_separable):
+    """
+    Func calc_accuracy/3
+    @spec calc_accuracy(np.array(), np.array(), np.array()) :: integer
+        Counts how many of the input values Xi in X are classified correctly given the weight and target matrices W & T.
+    """
+    y_prime = W@X
+    count = 0
+    if non_separable:
+        for i in range(150):
+            if y_prime[0][i] > 0 and T[0][i] == 1:
+                count += 1
+            if y_prime[0][i] < 0 and T[0][i] == -1:
+                count += 1
+    else:
+        for i in range(2*n):
+            if y_prime[0][i] > 0 and T[0][i] == 1:
+                count += 1
+            if y_prime[0][i] < 0 and T[0][i] == -1:
+                count += 1
+    return count
+
+
 def calculate_error(X, W, T):
     """
     Func calculate error/3
@@ -224,7 +275,7 @@ def delta_rule(X, W, T, eta):
     return -eta*(W@X - T)@np.transpose(X)
 
 
-def delta_learning(X, W, T, eta):
+def delta_learning(X, W, T, eta, non_separable):
     """
     Func delta_learning/3
     @spec delta_learning(np.array(), np.array(), np.array()) :: np.array(), list, list
@@ -236,6 +287,7 @@ def delta_learning(X, W, T, eta):
     iteration = 0
     errors = []
     iterations = []
+    accuracy_list = []
     while not converged:
         # Plot the perceptron line after each 5 iteration
         #if (iteration % 5) == 0:
@@ -246,7 +298,8 @@ def delta_learning(X, W, T, eta):
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
-            return W, iteration, errors, iterations
+            return W, iteration, errors, iterations, accuracy_list
+        accuracy_list.append(calc_accuracy(X, W, T, non_separable))
         errors.append(new_error)
         iterations.append(iteration)
         iteration += 1
@@ -254,7 +307,10 @@ def delta_learning(X, W, T, eta):
 
 def delta_sequential_learning(X, W, T, eta):
     """
-    w@x_column will yield 1x3*3x1 matrix -> 1x1 value
+    Func delta_sequential_learning/4
+    @spec delta_sequential_learning(np.array(), np.array(), np.array(), integer) :: np.array() list, list, list
+        Iteratively & sequentially calculates the delta_rule given Wi and Xi.
+        We are atm. unsure whether or not the error should be calculated inside of the inner for-loop - which makes sense but also not.
     """
     iteration = 0
     errors = []
@@ -293,16 +349,32 @@ def perceptron_rule(X, E, eta):
     return eta*(E@np.transpose(X))
 
 
-def perceptron_learning(X, W, T, eta, num_epoch):
+def perceptron_learning(X, W, T, eta, num_epoch, non_separable):
     """
-    Func perceptron_learning/4
-    @spec perceptron_learning(np.array(), np.array(), np.array(), integer) :: np.array()
-        Perform epoch number of perceptron learning iterations in batch mode. Function
-        returns the updated weight matrix when network function converges.
+    Func perceptron_learning/6
+    @spec perceptron_learning(np.array(), np.array(), np.array(), integer, integer, boolean) :: np.array(), list, list
+        Perform epoch number of perceptron learning iterations in batch mode.
+        Returns the updated weight matrix when network function converges.
+
+        Changelog:
+            |-> added boolean argument to set up E & Y differently depending on what task we are doing.
 
     """
-    E = np.zeros([1, 2*n])
-    Y = np.zeros([1, 2*n])
+    E = []
+    Y = []
+    acc_list = []
+    iterations = 0
+    iteration_list = []
+    range_lim = 1000
+    if non_separable:
+        E = np.zeros([1, 150])
+        Y = np.zeros([1, 150])
+        range_lim = 150
+    else:
+        E = np.zeros([1, 2*n])
+        Y = np.zeros([1, 2*n])
+        range_lim = 2*n
+
     for i in range(num_epoch):
         # Plot the perceptron line after each 5 iteration
         #if (i % 5) == 0:
@@ -311,7 +383,8 @@ def perceptron_learning(X, W, T, eta, num_epoch):
         # W has dimensions: 1x3, X has dimensions: 3x2n
         #     |-> Y-prime will get dimensions: 1x2n
         Y_prime = W@X
-        for j in range(2*n):
+        prev_error = calculate_error(X, W, T)
+        for j in range(range_lim):
             if Y_prime[0][j] <= -1:
                 Y[0][j] = -1
             else:
@@ -319,58 +392,64 @@ def perceptron_learning(X, W, T, eta, num_epoch):
             E[0][j] = T[0][j] - Y[0][j]
         delta_W = perceptron_rule(X, E, eta)
         W = delta_W + W
-    return W
+        iteration_list.append(iterations)
+        acc_list.append(calc_accuracy(X, W, T, non_separable))
+        iterations += 1
+    return W, iteration_list, acc_list
 
 
-def perform_perceptron(X, W, T, eta):
+def perform_perceptron(X, W, T, eta, non_separable):
     """
-    Func perform_perceptron/0
-    @spec perform_perceptron() :: void
+    Func perform_perceptron/5
+    @spec perform_perceptron(np.array(), np.array(), np.array(), integer, boolean) :: np.array(), list
         Trains the perceptron using perceptron learning rule.
         Number of epochs is equal to: ${see_below}
+        Also returns the updated weight matrix W.
     """
     num_epochs = 100
-    plot_all(X, W, False, False, eta, num_epochs)
+    plot_sets(X, W, False, True, eta, 0)
     print(f"    |-> starting training with {num_epochs} number of epochs...")
-    new_weight = perceptron_learning(X, W, T, eta, num_epochs)
+    new_weight, iteration_list, acc_list = perceptron_learning(X, W, T, eta, num_epochs, non_separable)
     print("    |-> training done.")
-    plot_all(X, new_weight, False, False, eta, num_epochs)
+    plot_sets(X, new_weight, False, True, eta, num_epochs)
+    return new_weight, acc_list
 
 
-def perform_delta(X, W, T, eta, do_batch):
+def perform_delta(X, W, T, eta, do_batch, non_separable):
     """
-    Func perform_delta/0
-    @spec perform_delta() :: void
-        Trains the perceptron the delta rule.
+    Func perform_delta/5
+    @spec perform_delta(np.array(), np.array(), np.array(), integer, boolean) :: np.array(), list, list
+        Trains the perceptron using the delta rule.
         Terminates when the error converges.
+        Returns a list of the calculated errors during the training. Used to compare batch w/ sequential.
+        Also returns the updated weight matrix W.
     """
     print("    |-> starting training...")
     if do_batch:
-        plot_all(X, W, True, True, eta)
-        new_weight, number_of_iterations, error_list, iteration_list = delta_learning(X, W, T, eta)
-        plot_all(X, new_weight, True, True, eta, number_of_iterations)
+        plot_sets(X, W, True, True, eta)
+        new_weight, number_of_iterations, error_list, iteration_list, acc_list = delta_learning(X, W, T, eta, non_separable)
+        plot_sets(X, new_weight, True, True, eta, number_of_iterations)
         plot_error_over_iterations(error_list, iteration_list)
-        return error_list
+        print("    |-> training done.")
+        return new_weight, error_list, acc_list
     else:
         plot_all(X, W, True, False, eta)
         new_weight, number_of_iterations, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
         plot_all(X, new_weight, True, False, eta, number_of_iterations)
         plot_error_over_iterations(error_list, iteration_list)
-        return error_list
-    print("    |-> training done.")
+        print("    |-> training done.")
+        return new_weight, error_list
 
 def main():
     learning_rate = 0.001
     X, W, T = generate_matrices()
-    print(X)
-    print(W)
-    # print("err.str\n    |-> performing perceptron learning...")
-    # perform_perceptron(X, W, T, learning_rate)
+    print("err.str\n    |-> performing perceptron learning...")
+    perform_perceptron(X, W, T, learning_rate, False)
     print("err.str\n    |-> performing delta batch learning...")
     err_batch = perform_delta(X, W, T, learning_rate, True)
     #print("err.str\n    |-> performing delta sequential learning...")
     #err_seq = perform_delta(X, W, T, learning_rate, False)
-    #plot_error_diff(err_batch, err_seq)
+    #plot_diff(err_batch, err_seq)
     exit()
 
 
