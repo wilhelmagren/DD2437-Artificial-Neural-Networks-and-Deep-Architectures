@@ -86,6 +86,39 @@ def generate_matrices():
     # Plot the generated data sets found in X
     return X, W, T
 
+def plot_error_diff(batch, seq):
+    """
+    Func plot_error_diff/2
+    @spec plot_error_diff(list, list) :: void
+        Visualizes the difference between the two learning method errors.
+        Batch is visualized as 'red' and sequential learning is 'blue'
+    """
+    num_iterations = 0
+    if len(batch) >= len(seq):
+        num_iterations = len(seq)
+    else:
+        num_iterations = len(batch)
+
+    iterations = [i for i in range(num_iterations)]
+
+    if len(batch) >= len(seq):
+        mod_batch = []
+        for i in range(num_iterations):
+            mod_batch.append(batch[i])
+        plt.plot(iterations, mod_batch, color="red")
+        plt.plot(iterations, seq, color="blue")
+    else:
+        plt.plot(iterations, batch, color="red")
+        mod_seq = []
+        for i in range(num_iterations):
+            mod_seq.append(seq[i])
+        plt.plot(iterations, mod_seq, color="blue")
+
+    plt.xlabel("Number of iterations")
+    plt.ylabel("Error quota")
+    plt.title("Difference of error quota between learning methods")
+    plt.grid()
+    plt.show()
 
 def plot_error_over_iterations(err, it):
     """
@@ -213,7 +246,7 @@ def delta_learning(X, W, T, eta):
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
-            return W, iteration, iterations, errors
+            return W, iteration, errors, iterations
         errors.append(new_error)
         iterations.append(iteration)
         iteration += 1
@@ -238,13 +271,13 @@ def delta_sequential_learning(X, W, T, eta):
             column_x[0][0] = X[0][column]
             column_x[1][0] = X[1][column]
             column_x[2][0] = X[2][column]
-            W = prev_W + -eta*(W@column_x - T[0][column])*np.transpose(column_x)
+            W = prev_W + -eta*(W@column_x - T[0][column])*np.transpose(column_x)    
         
         new_error = calculate_error(X, W, T)
         errors.append(new_error)
         iterations.append(iteration)
         if check_convergence(prev_error, new_error):
-            return W, iteration, iterations, errors
+            return W, iteration, errors, iterations
 
 
 def perceptron_rule(X, E, eta):
@@ -317,11 +350,13 @@ def perform_delta(X, W, T, eta, do_batch):
         new_weight, number_of_iterations, error_list, iteration_list = delta_learning(X, W, T, eta)
         plot_all(X, new_weight, True, True, eta, number_of_iterations)
         plot_error_over_iterations(error_list, iteration_list)
+        return error_list
     else:
         plot_all(X, W, True, False, eta)
         new_weight, number_of_iterations, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
         plot_all(X, new_weight, True, False, eta, number_of_iterations)
         plot_error_over_iterations(error_list, iteration_list)
+        return error_list
     print("    |-> training done.")
 
 def main():
@@ -330,9 +365,10 @@ def main():
     # print("err.str\n    |-> performing perceptron learning...")
     # perform_perceptron(X, W, T, learning_rate)
     print("err.str\n    |-> performing delta batch learning...")
-    perform_delta(X, W, T, learning_rate, True)
+    err_batch = perform_delta(X, W, T, learning_rate, True)
     print("err.str\n    |-> performing delta sequential learning...")
-    perform_delta(X, W, T, learning_rate, False)
+    err_seq = perform_delta(X, W, T, learning_rate, False)
+    plot_error_diff(err_batch, err_seq)
     exit()
 
 
