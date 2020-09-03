@@ -151,7 +151,7 @@ def plot_all_two_layer(X, W, V, eta=0.001, iteration=0):
     plt.show()
 
 
-def plot_sets(X, eta):
+def plot_sets(X, eta, plot_validation=False):
     """
     Func plot_all/6
     @spec plot_all(np.array(), np.array(), boolean, boolean, integer, integer) :: void
@@ -160,14 +160,22 @@ def plot_sets(X, eta):
             Wx = 0
             which in our case means: w0 + w1x1 + w2x2 = 0
     """
-
-    plt.scatter(X[0, :100], X[1, :100], color="blue")
-    plt.scatter(X[0, 100:], X[1, 100:], color="red")
-    plt.title(f"Multi-layer perceptron learning {eta}")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.ylim(top=0.5, bottom=-0.5)
-    plt.show()
+    if plot_validation:
+        plt.scatter(X[0, :], X[1, :100], color="blue")
+        plt.scatter(X[0, 50:], X[1, 50:], color="red")
+        plt.title(f"Multi-layer perceptron learning {eta}")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.ylim(top=0.5, bottom=-0.5)
+        plt.show()
+    else:
+        plt.scatter(X[0, :100], X[1, :ratio], color="blue")
+        plt.scatter(X[0, ratio:], X[1, ratio:], color="red")
+        plt.title(f"Multi-layer perceptron learning {eta}")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.ylim(top=0.5, bottom=-0.5)
+        plt.show()
 
 
 def calc_accuracy(X, W, V, T, non_separable = True):
@@ -209,8 +217,95 @@ def plot_mean_squared_error(error_list, iteration_list):
     plt.show()
 
 
+def split_X(X, ratio):
+    """
+    Return new_x,  validation_set_x, new_t
+    """
+    new_X = np.ones([3, 150])
+    validation_set_x = np.ones([3, 50])
+    target_set_t = np.ones([1, 150])
+    if ratio == 1:
+        # 25/25
+        new_X[0, :75] = X[0, :75]
+        new_X[1, :75] = X[1, :75]
+        new_X[0, 75:] = X[0, 100:175]
+        new_X[1, 75:] = X[1, 100:175]
+        validation_set_x[0, :25] = X[0, 75:100]
+        validation_set_x[1, :25] = X[1, 75:100]
+        validation_set_x[0, 25:] = X[0, 175:]
+        validation_set_x[1, 25:] = X[1, 175:]
+        target_set_t[0, :75] = -1
+        plt.scatter(new_X[0, :75], new_X[1, :75], color="blue")
+        plt.scatter(new_X[0, 75:], new_X[1, 75:], color="red")
+        plt.show()
+        plt.scatter(validation_set_x[0, :25], validation_set_x[1, :25], color="blue")
+        plt.scatter(validation_set_x[0, 25:], validation_set_x[1, 25:], color="red")
+        plt.show()
+        return new_X, validation_set_x, target_set_t
+
+    elif ratio == 2:
+        # 50 A
+        new_X[0, :50] = X[0, :50]
+        new_X[1, :50] = X[1, :50]
+        new_X[0, 50:] = X[0, 100:]
+        new_X[1, 50:] = X[1, 100:]
+        validation_set_x[0] = X[0, 50:100]
+        validation_set_x[1] = X[1, 50:100]
+        target_set_t[0, :50] = -1
+        plt.scatter(new_X[0, :50], new_X[1, :50], color="blue")
+        plt.scatter(new_X[0, 50:], new_X[1, 50:], color="red")
+        plt.show()
+        plt.scatter(validation_set_x[0, :50], validation_set_x[1, :50], color="blue")
+        plt.show()
+        return new_X, validation_set_x, target_set_t
+
+    elif ratio == 3:
+        # 50 B
+        new_X[0, :100] = X[0, :100]
+        new_X[1, :100] = X[1, :100]
+        new_X[0, 100:] = X[0, 100:150]
+        new_X[1, 100:] = X[1, 100:150]
+        validation_set_x[0] = X[0, 150:]
+        validation_set_x[1] = X[1, 150:]
+        target_set_t[0, :100] = -1
+        plt.scatter(new_X[0, :100], new_X[1, :100], color="blue")
+        plt.scatter(new_X[0, 100:], new_X[1, 100:], color="red")
+        plt.show()
+        plt.scatter(validation_set_x[0, :50], validation_set_x[1, :50], color="red")
+        plt.show()
+        return new_X, validation_set_x, target_set_t
+
+    elif ratio == 4:
+        # 20 < 0 80 > 0 A
+        new_X[0, :40] = X[0, :40]
+        new_X[0, 40:50] = X[0, 50:60]
+        new_X[1, :40] = X[1, :40]
+        new_X[1, 40:50] = X[1, 50:60]
+        new_X[0, 50:] = X[0, 100:]
+        new_X[1, 50:] = X[1, 100:]
+
+        validation_set_x[0, :10] = X[0, 40:50]
+        validation_set_x[0, 10:50] = X[0, 60:100]
+        validation_set_x[1, :10] = X[1, 40:50]
+        validation_set_x[1, 10:50] = X[1, 60:100]
+        target_set_t[0, :50] = -1
+        plt.scatter(new_X[0, :50], new_X[1, :50], color="blue")
+        plt.scatter(new_X[0, 50:], new_X[1, 50:], color="red")
+        plt.show()
+        plt.scatter(validation_set_x[0, :50], validation_set_x[1, :50], color="blue")
+        plt.show()
+        return new_X, validation_set_x, target_set_t
+    else:
+        print("xd")
+
+"""
+    Ratio1: 25/25
+    Ratio2: 50A
+    Ratio3: 50B
+    Ratio4: 20 <0 80 > 0 A
+"""
 X, W, V, T = generate_matrices()
-plot_sets(X, learning_rate)
-W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 10000, learning_rate)
-plot_accuracy(acc_list, it_list)
-plot_mean_squared_error(err_list, it_list)
+new_X, validation_X, new_T = split_X(X, 4)
+#W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 10000, learning_rate)
+#plot_accuracy(acc_list, it_list)
+#plot_mean_squared_error(err_list, it_list)
