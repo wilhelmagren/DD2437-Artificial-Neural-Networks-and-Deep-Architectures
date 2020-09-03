@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 n = 100
 iterations = 1000
-hidden_neurons = 100
+hidden_neurons = 5
 mA = [1.0, 0.3]
 mB = [0.0, -0.1]
 sigmaA = 0.2
@@ -98,9 +98,10 @@ def two_layer_train(X, T, W, V, epoch, eta):
         delta_W, delta_V = get_delta_weights(delta_h, delta_o, X, eta, h_out)
         V, W = update_weights(V,W,delta_W,delta_V)
         prev_error, new_error = calculate_error(X, prev_W, T), calculate_error(X, W, T)
-        error_list.append(abs(prev_error - new_error))
+        error_list.append(new_error)
         acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
+        #print(calc_accuracy(X,W,V,T))
     return W, V, error_list, acc_list, iterations
 
 
@@ -187,18 +188,18 @@ def calc_accuracy(X, W, V, T, non_separable = True):
     o_out, h_out = forward_pass(X, W, V)
     count = 0
     if non_separable:
-        for i in range(2*n):
+        for i in range(len(T)):
             if o_out[0][i] > 0 and T[0][i] == 1:
                 count += 1
             if o_out[0][i] < 0 and T[0][i] == -1:
                 count += 1
     else:
-        for i in range(2*n):
+        for i in range(len(T)):
             if o_out[0][i] > 0 and T[0][i] == 1:
                 count += 1
             if o_out[0][i] < 0 and T[0][i] == -1:
                 count += 1
-    return count/(2*n)
+    return count/(len(T))
 
 
 def plot_accuracy(accuracy_list, iteration_list):
@@ -312,8 +313,10 @@ def split_X(X, ratio):
     Ratio4: 20 <0 80 > 0 A
 """
 X, W, V, T = generate_matrices()
-new_X, validation_X, new_T, validation_T = split_X(X, 1)
-W, V, err_list, acc_list, it_list = two_layer_train(new_X, new_T, W, V, 10000, learning_rate)
-plot_accuracy(acc_list, it_list)
+new_X, validation_X, new_T, validation_T = split_X(X, 3)
+W, V, err_list, acc_list, it_list = two_layer_train(new_X, new_T, W, V, 1000, learning_rate)
+plot_mean_squared_error(err_list,it_list)
+W, V, err_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 1000, learning_rate)
+plot_mean_squared_error(err_list,it_list)
 #W, V, err_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 10000, learning_rate)
 #plot_accuracy(err_list, it_list)
