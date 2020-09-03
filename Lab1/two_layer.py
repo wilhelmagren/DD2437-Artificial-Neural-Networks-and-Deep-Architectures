@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 n = 100
 iterations = 1000
-hidden_neurons = 50
+hidden_neurons = 3
 mA = [1.0, 0.3]
 mB = [0.0, -0.1]
 sigmaA = 0.2
@@ -105,7 +105,7 @@ def two_layer_train(X, T, W, V, epoch, eta):
     return W, V, error_list, acc_list, iterations
 
 
-def plot_all_two_layer(X, W, V, eta=0.001, iteration=0):
+def plot_all_two_layer(X, W, eta=0.001, iteration=0):
     """
     Func plot_all/6
     @spec plot_all(np.array(), np.array(), boolean, boolean, integer, integer) :: void
@@ -114,7 +114,7 @@ def plot_all_two_layer(X, W, V, eta=0.001, iteration=0):
             Wx = 0
             which in our case means: w0 + w1x1 + w2x2 = 0
     """
-
+    print(W.shape)
     use_bias = True
 
     plt.scatter(X[0, n:], X[1, n:], color="red")
@@ -123,32 +123,16 @@ def plot_all_two_layer(X, W, V, eta=0.001, iteration=0):
     plt.xlabel("x")
     plt.ylabel("y")
     plt.ylim(top = 1.5, bottom = -1.5)
-    x_one = np.linspace(-3, 3, 200)
-    y_one = 0
-    if use_bias:
-        bias = W[0][2]
-        k = -(bias/W[0][1])/(bias/W[0][0])
-        m = -bias/W[0][1]
-        y_one = k*x_one + m
-    else:
-        """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
-        k = W[0][0]/W[0][1]
-        y_one = k*x_one
-
-    x_two = np.linspace(-3, 3, 200)
-    y_two = 0
-    if use_bias:
-        bias = V[0][2]
-        k = -(bias/V[0][1])/(bias/V[0][0])
-        m = -bias/V[0][1]
-        y_two = k*x_two + m
-    else:
-        """If the bias is set to False, the line is equal to y = k*x where k is equal to y/x."""
-        k = V[0][0]/V[0][1]
-        y_two = k*x_two
+    x = np.linspace(-3, 3, 200)
+    y_list = []
+    for w_row in range(len(W)):
+        bias = W[w_row][2]
+        k = -(bias / W[w_row][1]) / (bias / W[w_row][0])
+        m = -bias / W[w_row][1]
+        y_list.append(k*x + m)
     # plt3d.plot_surface(xx, yy, z, alpha=0.2)
-    plt.plot(x_one, y_one, color="green")
-    plt.plot(x_two, y_two, color="pink")
+    for linje in y_list:
+        plt.plot(x, linje, color="green")
     plt.show()
 
 
@@ -188,13 +172,13 @@ def calc_accuracy(X, W, V, T, non_separable = True):
     o_out, h_out = forward_pass(X, W, V)
     count = 0
     if non_separable:
-        for i in range(len(T)):
+        for i in range(len(T[0])):
             if o_out[0][i] > 0 and T[0][i] == 1:
                 count += 1
             if o_out[0][i] < 0 and T[0][i] == -1:
                 count += 1
     else:
-        for i in range(len(T)):
+        for i in range(len(T[0])):
             if o_out[0][i] > 0 and T[0][i] == 1:
                 count += 1
             if o_out[0][i] < 0 and T[0][i] == -1:
@@ -313,9 +297,7 @@ def split_X(X, ratio):
     Ratio4: 20 <0 80 > 0 A
 """
 X, W, V, T = generate_matrices()
-plot_sets(X, learning_rate)
-new_X, validation_X, new_T, validation_T = split_X(X, 1)
-W, V, err_list, acc_list, it_list = two_layer_train(new_X, new_T, W, V, 1000, learning_rate)
-plot_mean_squared_error(err_list,it_list)
-W, V, err2_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 1000, learning_rate)
-plot_accuracy(err2_list, it_list)
+plot_all_two_layer(X, W, learning_rate)
+#new_X, validation_X, new_T, validation_T = split_X(X, 1)
+W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 1000, learning_rate)
+plot_all_two_layer(X, W, learning_rate)
