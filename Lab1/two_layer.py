@@ -241,7 +241,9 @@ def split_X(X, ratio):
         plt.scatter(validation_set_x[0, :25], validation_set_x[1, :25], color="blue")
         plt.scatter(validation_set_x[0, 25:], validation_set_x[1, 25:], color="red")
         plt.show()
-        return new_X, validation_set_x, target_set_t
+        new_target_set = np.ones([1, 50])
+        new_target_set[0, :25] = -1
+        return new_X, validation_set_x, target_set_t, new_target_set
 
     elif ratio == 2:
         # 50 A
@@ -257,7 +259,9 @@ def split_X(X, ratio):
         plt.show()
         plt.scatter(validation_set_x[0, :50], validation_set_x[1, :50], color="blue")
         plt.show()
-        return new_X, validation_set_x, target_set_t
+        new_target_set = np.ones([1, 50])
+        new_target_set[0, :50] = -1
+        return new_X, validation_set_x, target_set_t, new_target_set
 
     elif ratio == 3:
         # 50 B
@@ -273,7 +277,8 @@ def split_X(X, ratio):
         plt.show()
         plt.scatter(validation_set_x[0, :50], validation_set_x[1, :50], color="red")
         plt.show()
-        return new_X, validation_set_x, target_set_t
+        new_target_set = np.ones([1, 50])
+        return new_X, validation_set_x, target_set_t, new_target_set
 
     elif ratio == 4:
         # 20 < 0 80 > 0 A
@@ -294,7 +299,9 @@ def split_X(X, ratio):
         plt.show()
         plt.scatter(validation_set_x[0, :50], validation_set_x[1, :50], color="blue")
         plt.show()
-        return new_X, validation_set_x, target_set_t
+        new_target_set = np.ones([1, 50])
+        new_target_set[0, :50] = -1
+        return new_X, validation_set_x, target_set_t, new_target_set
     else:
         print("xd")
 
@@ -305,7 +312,8 @@ def split_X(X, ratio):
     Ratio4: 20 <0 80 > 0 A
 """
 X, W, V, T = generate_matrices()
-new_X, validation_X, new_T = split_X(X, 4)
-#W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 10000, learning_rate)
-#plot_accuracy(acc_list, it_list)
-#plot_mean_squared_error(err_list, it_list)
+new_X, validation_X, new_T, validation_T = split_X(X, 1)
+W, V, err_list, acc_list, it_list = two_layer_train(new_X, new_T, W, V, 10000, learning_rate)
+plot_accuracy(acc_list, it_list)
+#W, V, err_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 10000, learning_rate)
+#plot_accuracy(err_list, it_list)
