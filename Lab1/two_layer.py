@@ -1,11 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 n = 100
+iterations = 1000
 hidden_neurons = 3
 mA = [1.0,0.3]
 mB = [0.0,-0.1]
 sigmaA = 0.2
 sigmaB = 0.3
+step_length = 0
 
 def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
@@ -23,10 +25,14 @@ def generate_matrices():
     X[2, :2*n] = 1.0
     # Vikter från X -> Hidden layers
     W = np.random.normal(1,0.5,(hidden_neurons,X.shape[0]))
-    #Vikter från Hidden layers -> Output, jag la till 1 så att vi kan hantera biased och matris multiplikation
+    #Vikter från Hidden layers -> Output, jag la till 1 så att vi kan hantera bias och matris multiplikation
     V =  np.random.normal(1,0.5,(1,hidden_neurons + 1))
+    #T är som vanligt
+    T = np.zeros([1,2*n])
+    T[0,:n] = 1
+    T[0,n:] = -1
 
-    return X,W,V
+    return X,W,V,T
 
 def plot(X):
     plt.scatter(X[0,:n],X[1,:n])
@@ -47,8 +53,34 @@ def back_pass(out,hout,T,V):
     delta_h = delta_h[:hidden_neurons,:]
     return delta_h,delta_o
 
-X,W,V = generate_matrices()
-hout, out = forward_pass(X,W,V)
-print(hout)
-print(out)
-#plot(X)
+def get_delta_weights(delta_h,delta_o,X,eta,h_out):
+    delta_W = -eta * delta_h@np.transpose(X)
+    delta_V = -eta * delta_o @ np.transpose(h_out)
+    return delta_W,delta_V
+
+def update_weights(V,W,delta_W,delta_V):
+    V = V + delta_V
+    W = W + delta_W
+    return V,W
+
+def calculate_error(X, W, T):
+    return np.sum((T - W@X) ** 2) / 2
+#def mean_square_error():
+#def get_delta_weights_momentum
+def two_layer_train(X,T,W,V,epoch,eta):
+    for i in range(epoch):
+        """ First we get o_out(final output) and h_out (output from hidden node) with forward pass, 
+            then we get the delta_h,delta_o by using back propagation, finally we set deltaW,deltaV and repeat for set epochs"""
+        o_out, h_out = forward_pass(X,W,V)
+        delta_h, delta_o = back_pass(o_out,h_out,T,V)
+        delta_W, delta_V = get_delta_weights(delta_h,delta_o,eta,h_out)
+        V,W = update_weights(V,W,delta_W,delta_V)
+        return V,W
+
+
+
+
+
+X,W,V,T = generate_matrices()
+
+plot(X)
