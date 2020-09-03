@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 n = 100
 iterations = 1000
-hidden_neurons = 5
+hidden_neurons = 50
 mA = [1.0, 0.3]
 mB = [0.0, -0.1]
 sigmaA = 0.2
@@ -98,7 +98,7 @@ def two_layer_train(X, T, W, V, epoch, eta):
         delta_W, delta_V = get_delta_weights(delta_h, delta_o, X, eta, h_out)
         V, W = update_weights(V,W,delta_W,delta_V)
         prev_error, new_error = calculate_error(X, prev_W, T), calculate_error(X, W, T)
-        error_list.append(new_error)
+        error_list.append(abs(prev_error - new_error))
         acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
         #print(calc_accuracy(X,W,V,T))
@@ -162,16 +162,16 @@ def plot_sets(X, eta, plot_validation=False):
             which in our case means: w0 + w1x1 + w2x2 = 0
     """
     if plot_validation:
-        plt.scatter(X[0, :], X[1, :100], color="blue")
-        plt.scatter(X[0, 50:], X[1, 50:], color="red")
+        plt.scatter(X[0, :100], X[1, :100], color="blue")
+        plt.scatter(X[0, 100:], X[1, 100:], color="red")
         plt.title(f"Multi-layer perceptron learning {eta}")
         plt.xlabel("x")
         plt.ylabel("y")
         plt.ylim(top=0.5, bottom=-0.5)
         plt.show()
     else:
-        plt.scatter(X[0, :100], X[1, :ratio], color="blue")
-        plt.scatter(X[0, ratio:], X[1, ratio:], color="red")
+        plt.scatter(X[0, :100], X[1, :100], color="blue")
+        plt.scatter(X[0, 100:], X[1, 100:], color="red")
         plt.title(f"Multi-layer perceptron learning {eta}")
         plt.xlabel("x")
         plt.ylabel("y")
@@ -313,10 +313,9 @@ def split_X(X, ratio):
     Ratio4: 20 <0 80 > 0 A
 """
 X, W, V, T = generate_matrices()
-new_X, validation_X, new_T, validation_T = split_X(X, 3)
+plot_sets(X, learning_rate)
+new_X, validation_X, new_T, validation_T = split_X(X, 1)
 W, V, err_list, acc_list, it_list = two_layer_train(new_X, new_T, W, V, 1000, learning_rate)
 plot_mean_squared_error(err_list,it_list)
-W, V, err_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 1000, learning_rate)
-plot_mean_squared_error(err_list,it_list)
-#W, V, err_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 10000, learning_rate)
-#plot_accuracy(err_list, it_list)
+W, V, err2_list, acc_list, it_list = two_layer_train(validation_X, validation_T, W, V, 1000, learning_rate)
+plot_accuracy(err2_list, it_list)
