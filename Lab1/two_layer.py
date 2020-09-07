@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from mpl_toolkits import mplot3d
 n = 100
 iterations = 1000
@@ -16,15 +17,20 @@ def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
 
 def guass_func():
-    x = np.arange(-5,5,0.5)
-    y = np.arange(-5,5,0.5)
-    xx,yy = np.meshgrid(x,y,sparse=False)
-    xx,yy = xx.flatten(),yy.flatten()
-    print(xx)
-    print(yy)
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    X = np.arange(-10, 10, 0.5)
+    Y = np.arange(-10, 10, 0.5)
+    X, Y = np.meshgrid(X, Y)
+    Z = np.exp(-X * X * 0.1) * np.exp(-Y * Y * 0.1) - 0.5
+    #R = np.sqrt(X ** 2 + Y ** 2)
+    #Z = np.sin(R)
 
+    # Plot the surface.
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+    plt.show()
 
-    #z = np.exp(-x*x*0.1) * np.exp(-y*y*0.1) - 0.5
     #np.mesh(x,y,z)
     #targets = np.reshape(z,1,ndata)
     #[xx,yy] = np.meshgrid(x,y)
