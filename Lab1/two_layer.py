@@ -16,6 +16,22 @@ learning_rate = 0.001
 def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
 
+def split_data(X,T,ratio):
+
+    X = np.random.shuffle(X)
+    T = np.random.shuffle(T)
+    
+    test_ratio = int((1-ratio)*len(X[0]))
+    print(test_ratio)
+    x_train = X[0,:test_ratio]
+    y_train = X[1,:test_ratio]
+    bias_train = X[2,:test_ratio]
+    train_matrix = np.vstack([x_train,y_train,bias_train])
+    T = np.atleast_2d(np.exp(-x_train* x_train * 0.1) * np.exp(-y_train * y_train * 0.1) - 0.5)
+    W = np.random.normal(1, 0.5, (hidden_neurons, x_train.shape[0]))
+    print(train_matrix.shape)
+    print(T.shape)
+    return train_matrix,W,T
 
 def gauss_func():
     fig = plt.figure()
@@ -24,7 +40,6 @@ def gauss_func():
     Y = np.arange(-5, 5, 0.5)
     X, Y = np.meshgrid(X, Y)
     Z = np.exp(-X * X * 0.1) * np.exp(-Y * Y * 0.1) - 0.5
-    print(Z.shape)
 
     # Plot the surface.
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
@@ -42,7 +57,6 @@ def gauss_func():
 
 def phi_prime(x):
     return ((1 + phi(x)) * (1 - phi(x))) / 2
-
 
 def generate_matrices():
     X = np.zeros([3,2*n])
@@ -64,11 +78,6 @@ def generate_matrices():
 
     return X,W,V,T
 
-
-def plot(X):
-    plt.scatter(X[0,:n],X[1,:n])
-    plt.scatter(X[0,n:],X[1,n:])
-    plt.show()
 
 
 # Forward pass är att gå från X till output
@@ -373,6 +382,8 @@ def split_X(X, ratio):
 """
 #auto_encode(500000,0.001)
 X, T, W, V = gauss_func()
+print(X)
+train_x,train_w,train_t = split_data(X,T,0.2)
 two_layer_train(X, T, W, V, 10000, 0.001)
 #X, W, V, T = generate_matrices()
 #plot_all_two_layer(X, W, learning_rate)
