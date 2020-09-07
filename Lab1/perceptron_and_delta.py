@@ -103,25 +103,25 @@ def plot_diff(batch, seq):
         mod_batch = []
         for i in range(num_iterations):
             mod_batch.append(batch[i])
-        plt.plot(iterations, mod_batch, color="red", label="test perc")
-        plt.plot(iterations, seq, color="blue", label="test delta")
+        plt.plot(iterations, mod_batch, color="red", label="training")
+        plt.plot(iterations, seq, color="blue", label="validation")
         plt.legend()
         plt.xlabel("Number of iterations")
-        plt.ylabel("Correctly classified data samples")
-        plt.title("Accuracy of delta rule & perceptron learning")
+        plt.ylabel("MSE")
+        plt.title("MSE Diff training vs validation")
         plt.grid()
         plt.show()
         exit()
     else:
-        plt.plot(iterations, batch, color="red")
+        plt.plot(iterations, batch, color="red",label = "training")
         mod_seq = []
         for i in range(num_iterations):
             mod_seq.append(seq[i])
-        plt.plot(iterations, mod_seq, color="blue")
+        plt.plot(iterations, mod_seq, color="blue",label = "validation")
         plt.legend()
         plt.xlabel("Number of iterations")
-        plt.ylabel("Correctly classified data samples")
-        plt.title("Accuracy of delta rule & perceptron learning")
+        plt.ylabel("MSE")
+        plt.title("MSE Diff training vs validation")
         plt.grid()
         plt.show()
         exit()

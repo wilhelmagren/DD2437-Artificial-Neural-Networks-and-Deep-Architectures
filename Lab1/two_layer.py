@@ -1,10 +1,11 @@
 import numpy as np
+import perceptron_and_delta as pad
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits import mplot3d
 n = 100
 iterations = 1000
-hidden_neurons = 100
+hidden_neurons = 20
 mA = [-2.0, 0.0]
 mB = [0.0, 0.0]
 sigmaA = 0.2
@@ -17,20 +18,16 @@ def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
 
 def split_data(X,T,ratio):
-
-    X = np.random.shuffle(X)
-    T = np.random.shuffle(T)
-    
+    np.random.shuffle(X)
+    np.random.shuffle(T)
+    #print(X)
     test_ratio = int((1-ratio)*len(X[0]))
-    print(test_ratio)
     x_train = X[0,:test_ratio]
     y_train = X[1,:test_ratio]
     bias_train = X[2,:test_ratio]
     train_matrix = np.vstack([x_train,y_train,bias_train])
     T = np.atleast_2d(np.exp(-x_train* x_train * 0.1) * np.exp(-y_train * y_train * 0.1) - 0.5)
-    W = np.random.normal(1, 0.5, (hidden_neurons, x_train.shape[0]))
-    print(train_matrix.shape)
-    print(T.shape)
+    W = np.random.normal(1, 0.5, (hidden_neurons, train_matrix.shape[0]))
     return train_matrix,W,T
 
 def gauss_func():
@@ -75,7 +72,6 @@ def generate_matrices():
     T = np.zeros([1,2*n])
     T[0,:n] = -1
     T[0,n:] = 1
-
     return X,W,V,T
 
 
@@ -112,7 +108,7 @@ def update_weights(V, W, delta_W, delta_V):
 
 
 def calculate_error(X, W, T):
-    return np.sum((T - W@X) ** 2) / 2
+    return np.sum((T - W@X) ** 2) / len(T[0])
 
 
 def mse_encoder(X, T, W, V):
@@ -145,10 +141,8 @@ def auto_encode(epoch,eta):
     h_out = h_out[:-1]
     #print(h_out)
     h_out = np.sign(h_out)
-    print(h_out)
     o_out = np.sign(o_out)
-    print(o_out)
-    print(error)
+
 
 
 
@@ -169,11 +163,11 @@ def two_layer_train(X, T, W, V, epoch, eta):
         delta_h, delta_o = back_pass(o_out,h_out,T,V)
         delta_W, delta_V = get_delta_weights(delta_h, delta_o, X, eta, h_out)
         V, W = update_weights(V,W,delta_W,delta_V)
-        #prev_error, new_error = calculate_error(X, prev_W, T), calculate_error(X, W, T)
-        #error_list.append(new_error)
+        new_error = calculate_error(X, W, T)
+        error_list.append(new_error)
         acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
-        if (i%1000) == 0:
+        """if (i%1000) == 0:
             # PLOT O_OUT
             fig = plt.figure()
             ax = fig.gca(projection='3d')
@@ -181,12 +175,12 @@ def two_layer_train(X, T, W, V, epoch, eta):
             Y_plot = np.arange(-5, 5, 0.5)
             X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
             # Plot the surface.
-            print_out = np.reshape(o_out, [20,20])
+            print_out = np.reshape(o_out,[len(X_plot),len(Y_plot)])
             surf = ax.plot_surface(X_plot, Y_plot, print_out, cmap=cm.coolwarm,
                                    linewidth=0, antialiased=False)
             plt.show()
-        #print(calc_accuracy(X,W,V,T))
-    return W, V,acc_list, iterations
+        #print(calc_accuracy(X,W,V,T))"""
+    return W, V,error_list,iterations
 
 
 def plot_all_two_layer(X, W, eta=0.001, iteration=0):
@@ -382,9 +376,11 @@ def split_X(X, ratio):
 """
 #auto_encode(500000,0.001)
 X, T, W, V = gauss_func()
-print(X)
 train_x,train_w,train_t = split_data(X,T,0.2)
-two_layer_train(X, T, W, V, 10000, 0.001)
+trained_w,trained_v, err_list,it_list = two_layer_train(train_x,train_t,train_w,V,10000,0.001)
+_,_,new_err_list,new_it_list = two_layer_train(X,T,trained_w,trained_v,10000,0.001)
+pad.plot_diff(err_list,new_err_list)
+#two_layer_train(X, T, W, V, 10000, 0.001)
 #X, W, V, T = generate_matrices()
 #plot_all_two_layer(X, W, learning_rate)
 #new_X, validation_X, new_T, validation_T = split_X(X, 1)
