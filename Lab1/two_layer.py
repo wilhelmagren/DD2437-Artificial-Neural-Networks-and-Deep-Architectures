@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 n = 100
 iterations = 1000
-hidden_neurons = 2
+hidden_neurons = 3
 mA = [-2.0, 0.0]
 mB = [0.0, 0.0]
 sigmaA = 0.2
@@ -48,7 +48,9 @@ def plot(X):
 
 # Forward pass är att gå från X till output
 def forward_pass(X,W,V):
+    #print(W.shape)
     hin = W @ X
+   # print(hin.shape)
     hout = np.concatenate((phi(hin), np.ones((1, X.shape[1]))))
     oin = V @ hout
     out = phi(oin)
@@ -56,7 +58,7 @@ def forward_pass(X,W,V):
 
 
 def back_pass(out,hout,T,V):
-    delta_o = out-T * phi_prime(out)
+    delta_o = (out-T) * phi_prime(out)
     delta_h = (np.transpose(V) @ delta_o) * phi_prime(hout)
     # Gotta remove the last part(bias)
     delta_h = delta_h[:hidden_neurons, :]
@@ -79,8 +81,46 @@ def calculate_error(X, W, T):
     return np.sum((T - W@X) ** 2) / 2
 
 
+def mse_encoder(X, T, W, V):
+    o_out, h_out = forward_pass(X,W,V)
+    error = T - np.sign(o_out)
+    return np.sum(error ** 2) / len(T),o_out,h_out
+
+
+
+
 # def mean_square_error():
 # def get_delta_weights_momentum
+def auto_encode(epoch,eta):
+    output = 8
+    X = np.array([[1,-1,-1,-1,-1,-1,-1,-1],
+                 [-1,1,-1,-1,-1,-1,-1,-1],
+                 [-1,-1,1,-1,-1,-1,-1,-1],
+                 [-1,-1,-1,1,-1,-1,-1,-1],
+                 [-1,-1,-1,-1,1,-1,-1,-1],
+                 [-1,-1,-1,-1,-1,1,-1,-1],
+                 [-1,-1,-1,-1,-1,-1,1,-1],
+                 [-1,-1,-1,-1,-1,-1,-1,1],
+                 [1,1,1,1,1,1,1,1]])
+    W = np.random.normal(1, 0.5, (hidden_neurons, X.shape[0]))
+    # Vikter från Hidden layers -> Output, jag la till 1 så att vi kan hantera bias och matris multiplikation
+    V = np.random.normal(1, 0.5, (output, hidden_neurons + 1))
+    T = X[:-1]
+    W,V,acc_list,iterations = two_layer_train(X,T,W,V,epoch,eta)
+    #print(np.sign(W))
+
+    error,o_out,h_out = mse_encoder(X,T,W,V)
+    h_out = h_out[:-1]
+    #print(h_out)
+    h_out = np.sign(h_out)
+    print(h_out)
+    o_out = np.sign(o_out)
+    print(o_out)
+    print(error)
+
+
+
+
 def two_layer_train(X, T, W, V, epoch, eta):
     acc_list = []
     iterations = []
@@ -92,17 +132,18 @@ def two_layer_train(X, T, W, V, epoch, eta):
         First we get o_out(final output) and h_out (output from hidden node) with forward pass, 
             then we get the delta_h,delta_o by using back propagation, finally we set deltaW,deltaV and repeat for set epochs
         """
+
         prev_W, prev_V = W, V
         o_out, h_out = forward_pass(X,W,V)
         delta_h, delta_o = back_pass(o_out,h_out,T,V)
         delta_W, delta_V = get_delta_weights(delta_h, delta_o, X, eta, h_out)
         V, W = update_weights(V,W,delta_W,delta_V)
-        prev_error, new_error = calculate_error(X, prev_W, T), calculate_error(X, W, T)
-        error_list.append(new_error)
+        #prev_error, new_error = calculate_error(X, prev_W, T), calculate_error(X, W, T)
+        #error_list.append(new_error)
         acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
         #print(calc_accuracy(X,W,V,T))
-    return W, V, error_list, acc_list, iterations
+    return W, V,acc_list, iterations
 
 
 def plot_all_two_layer(X, W, eta=0.001, iteration=0):
@@ -200,6 +241,8 @@ def plot_mean_squared_error(error_list, iteration_list):
     plt.show()
 
 
+
+
 def split_X(X, ratio):
     """
     Return new_x,  validation_set_x, new_t
@@ -294,8 +337,9 @@ def split_X(X, ratio):
     Ratio3: 50B
     Ratio4: 20 <0 80 > 0 A
 """
-X, W, V, T = generate_matrices()
-plot_all_two_layer(X, W, learning_rate)
+auto_encode(500000,0.001)
+#X, W, V, T = generate_matrices()
+#plot_all_two_layer(X, W, learning_rate)
 #new_X, validation_X, new_T, validation_T = split_X(X, 1)
-W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 1000, learning_rate)
-plot_all_two_layer(X, W, learning_rate)
+#W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 1000, learning_rate)
+#plot_all_two_layer(X, W, learning_rate)
