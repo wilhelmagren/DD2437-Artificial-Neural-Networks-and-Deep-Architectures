@@ -4,7 +4,7 @@ from matplotlib import cm
 from mpl_toolkits import mplot3d
 n = 100
 iterations = 1000
-hidden_neurons = 2
+hidden_neurons = 100
 mA = [-2.0, 0.0]
 mB = [0.0, 0.0]
 sigmaA = 0.2
@@ -16,25 +16,29 @@ learning_rate = 0.001
 def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
 
-def guass_func():
+
+def gauss_func():
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    X = np.arange(-10, 10, 0.5)
-    Y = np.arange(-10, 10, 0.5)
+    X = np.arange(-5, 5, 0.5)
+    Y = np.arange(-5, 5, 0.5)
     X, Y = np.meshgrid(X, Y)
     Z = np.exp(-X * X * 0.1) * np.exp(-Y * Y * 0.1) - 0.5
-    #R = np.sqrt(X ** 2 + Y ** 2)
-    #Z = np.sin(R)
+    print(Z.shape)
 
     # Plot the surface.
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                            linewidth=0, antialiased=False)
     plt.show()
-
-    #np.mesh(x,y,z)
-    #targets = np.reshape(z,1,ndata)
-    #[xx,yy] = np.meshgrid(x,y)
-    #atterns = [np.reshape(xx,1,ndata):reshape(yy,1,ndata)]
+    xx, yy = X.flatten(), Y.flatten()
+    # Lägger arrays i sekvens vertikalt. alltså xx ligger ovan yy
+    X = np.vstack([xx, yy, np.ones(len(xx))])
+    # Vår target matris är ju två värden (i x och y planet) så behöver en 2d array right?
+    T = np.atleast_2d(np.exp(-xx * xx * 0.1) * np.exp(-yy * yy * 0.1) - 0.5)
+    W = np.random.normal(1, 0.5, (hidden_neurons, X.shape[0]))
+    # Vikter från Hidden layers -> Output, jag la till 1 så att vi kan hantera bias och matris multiplikation
+    V = np.random.normal(1, 0.5, (1, hidden_neurons + 1))
+    return X, T, W, V
 
 def phi_prime(x):
     return ((1 + phi(x)) * (1 - phi(x))) / 2
@@ -151,7 +155,6 @@ def two_layer_train(X, T, W, V, epoch, eta):
         First we get o_out(final output) and h_out (output from hidden node) with forward pass, 
             then we get the delta_h,delta_o by using back propagation, finally we set deltaW,deltaV and repeat for set epochs
         """
-
         prev_W, prev_V = W, V
         o_out, h_out = forward_pass(X,W,V)
         delta_h, delta_o = back_pass(o_out,h_out,T,V)
@@ -161,6 +164,18 @@ def two_layer_train(X, T, W, V, epoch, eta):
         #error_list.append(new_error)
         acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
+        if (i%1000) == 0:
+            # PLOT O_OUT
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            X_plot = np.arange(-5, 5, 0.5)
+            Y_plot = np.arange(-5, 5, 0.5)
+            X_plot, Y_plot = np.meshgrid(X_plot, Y_plot)
+            # Plot the surface.
+            print_out = np.reshape(o_out, [20,20])
+            surf = ax.plot_surface(X_plot, Y_plot, print_out, cmap=cm.coolwarm,
+                                   linewidth=0, antialiased=False)
+            plt.show()
         #print(calc_accuracy(X,W,V,T))
     return W, V,acc_list, iterations
 
@@ -357,7 +372,8 @@ def split_X(X, ratio):
     Ratio4: 20 <0 80 > 0 A
 """
 #auto_encode(500000,0.001)
-guass_func()
+X, T, W, V = gauss_func()
+two_layer_train(X, T, W, V, 10000, 0.001)
 #X, W, V, T = generate_matrices()
 #plot_all_two_layer(X, W, learning_rate)
 #new_X, validation_X, new_T, validation_T = split_X(X, 1)
