@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
 n = 100
 iterations = 1000
-hidden_neurons = 3
+hidden_neurons = 2
 mA = [-2.0, 0.0]
 mB = [0.0, 0.0]
 sigmaA = 0.2
@@ -14,6 +15,20 @@ learning_rate = 0.001
 def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
 
+def guass_func():
+    x = np.arange(-5,5,0.5)
+    y = np.arange(-5,5,0.5)
+    xx,yy = np.meshgrid(x,y,sparse=False)
+    xx,yy = xx.flatten(),yy.flatten()
+    print(xx)
+    print(yy)
+
+
+    #z = np.exp(-x*x*0.1) * np.exp(-y*y*0.1) - 0.5
+    #np.mesh(x,y,z)
+    #targets = np.reshape(z,1,ndata)
+    #[xx,yy] = np.meshgrid(x,y)
+    #atterns = [np.reshape(xx,1,ndata):reshape(yy,1,ndata)]
 
 def phi_prime(x):
     return ((1 + phi(x)) * (1 - phi(x))) / 2
@@ -85,8 +100,6 @@ def mse_encoder(X, T, W, V):
     o_out, h_out = forward_pass(X,W,V)
     error = T - np.sign(o_out)
     return np.sum(error ** 2) / len(T),o_out,h_out
-
-
 
 
 # def mean_square_error():
@@ -337,7 +350,8 @@ def split_X(X, ratio):
     Ratio3: 50B
     Ratio4: 20 <0 80 > 0 A
 """
-auto_encode(500000,0.001)
+#auto_encode(500000,0.001)
+guass_func()
 #X, W, V, T = generate_matrices()
 #plot_all_two_layer(X, W, learning_rate)
 #new_X, validation_X, new_T, validation_T = split_X(X, 1)
