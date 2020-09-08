@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-#import tensorflow
+import tensorflow as tf
+from tensorflow import keras
+
+print(f"### -- Multilayer Perceptron bingbong -- ###\n\nTensorflow version: {tf.__version__}")
 next_t = 5
 beta = 0.2
 gamma = 0.1
@@ -12,16 +15,18 @@ training = 500
 valid_training = 1000
 max = 1501
 predict = 5
+hidden_neurons = 2
+eta = 0.001
 
 def generate_input(x):
     t = np.arange(301,1501)
-    input = np.array([x[t-20],x[t-15],x[t-10],x[t-5],x[t]])
+    input = np.array([x[t-20], x[t-15], x[t-10], x[t-5], x[t]])
     output = x[t + predict]
     return input, output
 
 
 def plot(x):
-    y = np.linspace(-5, 1500, 1506)
+    y = np.linspace(-5, 1500, 500)
     plt.plot(y,x)
     plt.show()
 
@@ -45,12 +50,7 @@ def mse(X, W, T):
     return np.square(np.subtract(T, W@X)).mean()
 
 
-def split_data(input,output):
-    #print(input.shape)
-    # training 500 -> training_t
-    # validation 500 -> validation_t
-    # testing 200 -> testing_t
-
+def split_data(input, output):
     train_x = np.zeros([5, training])
     test_x = np.zeros([5, testsamples])
     train_t = np.zeros([1, training])
@@ -68,6 +68,27 @@ def split_data(input,output):
     return train_x, train_t, valid_x, valid_t, test_x, test_t   
 
 
+def model_the_fucking_data(training_data, target_data, epoch=100):
+    model = keras.Sequential([
+        # Flatten?
+        keras.layers.Dense(5, activation='relu', name='input layer'),
+        keras.layers.Dense(hidden_neurons, activation='relu', name='hidden layer'),
+        keras.layers.Dense(1, name='output layer')
+    ])
+
+    # Stochastic Gradient Descent
+    sgd = keras.optimizers.SGD(
+        learning_rate=eta, momentum=0.0, name='SGD'
+    )
+    model.compile(optimizer=sgd,
+                    loss=keras.losses.MeanSquaredError(),
+                    metrics=['accuracy'])
+    model.fit(training_data, target_data, epoch)
+    test_loss, test_acc = model.evaluate(training_data, target_data, verbose=2)
+    print('\nTest accuracy: ', test_acc)
+    print('\nTest loss: ', test_loss)
+
 x = mackey_glass(max + predict)
 input, output = generate_input(x)
-split_data(input,output)
+train_x, train_t, valid_x, valid_t, test_x, test_t = split_data(input, output)
+model_the_fucking_data(train_x, train_t)
