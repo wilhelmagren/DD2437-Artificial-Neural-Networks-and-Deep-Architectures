@@ -67,13 +67,17 @@ def split_data(input, output):
     return train_x, train_t, test_x, test_t
 
 
+def calculate_error(Y, T):
+    return np.sum((T - Y[0]) ** 2)/len(Y[0])
+
+
 def model_the_fucking_data(training_data, target_data, test_x, test_t, epoch=1000,drop_out=True):
 
     model = keras.Sequential()
     model.add(keras.Input(shape=(5, )))
     model.add(keras.layers.Dense(hidden_neurons))
     if(drop_out):
-        model.add(keras.layers.Dropout(0.5))
+        model.add(keras.layers.Dropout(0.1))
     model.add(keras.layers.Dense(output_nodes))
     sgd = keras.optimizers.SGD(learning_rate=eta, momentum=momen)
     early_ritsch = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
@@ -84,15 +88,24 @@ def model_the_fucking_data(training_data, target_data, test_x, test_t, epoch=100
     end_t = time.time()
     print('time tooked: ', end_t - start_t)
     prediction_van_darkholme = model.predict(test_x)
+    # i van darkholme har vi alla predictions. sen gör vi MSE med predictions och test_t DETTA GER OSS MSE för test
+    print(f"Training MSE: {hist.history['val_loss'][-1]}")
+    print(f"Testing MSE: {calculate_error(prediction_van_darkholme.T, test_t)}")
+    #weight, bias = model.layers[0].get_weights()
     plt.title('Learning Curves')
     plt.xlabel('Epochs')
-    plt.ylabel('p STORT P rediction')
+    plt.ylabel('Prediction')
     plt.plot(prediction_van_darkholme, label='prediction')
     plt.plot(test_t, label='TARGET')
     plt.legend()
     plt.show()
+    #return weight
 
 x = mackey_glass(max + predict)
 input, output = generate_input(x)
 train_x, train_t, test_x, test_t = split_data(input, output)
-model_the_fucking_data(train_x.T, train_t, test_x.T, test_t)
+weight = model_the_fucking_data(train_x.T, train_t, test_x.T, test_t)
+plt.hist(weight, bins='auto', label='weight histogram')
+plt.xlabel("weight value")
+plt.ylabel("number of weights")
+plt.show()
