@@ -15,7 +15,7 @@ testsamples = 200
 training = 1000
 max = 1501
 predict = 5
-hidden_neurons = 2
+hidden_neurons = 5
 eta = 0.001
 output_nodes = 1
 momen = 0.5
@@ -67,7 +67,7 @@ def split_data(input, output):
     return train_x, train_t, test_x, test_t
 
 
-def model_the_fucking_data(training_data, target_data, epoch=1000):
+def model_the_fucking_data(training_data, target_data, test_x, test_t, epoch=1000):
     model = keras.Sequential()
     model.add(keras.Input(shape=(5, )))
     model.add(keras.layers.Dense(hidden_neurons))
@@ -75,14 +75,21 @@ def model_the_fucking_data(training_data, target_data, epoch=1000):
     sgd = keras.optimizers.SGD(learning_rate=eta, momentum=momen)
     early_ritsch = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
     model.compile(optimizer=sgd,
-                    loss='mse',
-                    metrics=['accuracy'])
+                    loss='mse')
     start_t = time.time()
-    model.fit(training_data, target_data, epochs=epoch, batch_size=64, verbose=1, validation_split=0.5, callbacks=[early_ritsch])
+    hist = model.fit(training_data, target_data, epochs=epoch, batch_size=32, verbose=1, validation_split=0.5, callbacks=[early_ritsch])
     end_t = time.time()
     print('time tooked: ', end_t - start_t)
+    prediction_van_darkholme = model.predict(test_x)
+    plt.title('Learning Curves')
+    plt.xlabel('Epochs')
+    plt.ylabel('p STORT P rediction')
+    plt.plot(prediction_van_darkholme, label='prediction')
+    plt.plot(test_t, label='TARGET')
+    plt.legend()
+    plt.show()
 
 x = mackey_glass(max + predict)
 input, output = generate_input(x)
 train_x, train_t, test_x, test_t = split_data(input, output)
-model_the_fucking_data(train_x.T, train_t)
+model_the_fucking_data(train_x.T, train_t, test_x.T, test_t)
