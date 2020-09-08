@@ -74,8 +74,6 @@ def generate_matrices():
     T[0,n:] = 1
     return X,W,V,T
 
-
-
 # Forward pass är att gå från X till output
 def forward_pass(X,W,V):
     #print(W.shape)
@@ -108,7 +106,7 @@ def update_weights(V, W, delta_W, delta_V):
 
 
 def calculate_error(X, W, T):
-    return np.sum((T - W@X) ** 2) / len(T[0])
+    return np.sum((T - W@X) ** 2).mean
 
 
 def mse_encoder(X, T, W, V):
@@ -142,9 +140,6 @@ def auto_encode(epoch,eta):
     #print(h_out)
     h_out = np.sign(h_out)
     o_out = np.sign(o_out)
-
-
-
 
 
 def two_layer_train(X, T, W, V, epoch, eta):
@@ -376,10 +371,11 @@ def split_X(X, ratio):
 """
 #auto_encode(500000,0.001)
 X, T, W, V = gauss_func()
-train_x,train_w,train_t = split_data(X,T,0.2)
-trained_w,trained_v, err_list,it_list = two_layer_train(train_x,train_t,train_w,V,10000,0.001)
-_,_,new_err_list,new_it_list = two_layer_train(X,T,trained_w,trained_v,10000,0.001)
-pad.plot_diff(err_list,new_err_list)
+two_layer_train(X,T,W,V,1000,0.001)
+#train_x,train_w,train_t = split_data(X,T,0.2)
+#trained_w,trained_v, err_list,it_list = two_layer_train(train_x,train_t,train_w,V,10000,0.001)
+#_,_,new_err_list,new_it_list = two_layer_train(X,T,trained_w,trained_v,10000,0.001)
+#pad.plot_diff(err_list,new_err_list)
 #two_layer_train(X, T, W, V, 10000, 0.001)
 #X, W, V, T = generate_matrices()
 #plot_all_two_layer(X, W, learning_rate)
