@@ -67,10 +67,13 @@ def split_data(input, output):
     return train_x, train_t, test_x, test_t
 
 
-def model_the_fucking_data(training_data, target_data, test_x, test_t, epoch=1000):
+def model_the_fucking_data(training_data, target_data, test_x, test_t, epoch=1000,drop_out=True):
+
     model = keras.Sequential()
     model.add(keras.Input(shape=(5, )))
     model.add(keras.layers.Dense(hidden_neurons))
+    if(drop_out):
+        model.add(keras.layers.Dropout(0.5))
     model.add(keras.layers.Dense(output_nodes))
     sgd = keras.optimizers.SGD(learning_rate=eta, momentum=momen)
     early_ritsch = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
