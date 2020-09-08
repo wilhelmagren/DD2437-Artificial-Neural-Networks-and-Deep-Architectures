@@ -41,6 +41,10 @@ def mackey_glass(T):
     return x
 
 
+def mse(X, W, T):
+    return np.square(np.subtract(T, W@X)).mean()
+
+
 def split_data(input,output):
     #print(input.shape)
     # training 500 -> training_t
