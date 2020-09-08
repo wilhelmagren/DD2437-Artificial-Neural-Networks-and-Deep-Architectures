@@ -15,15 +15,24 @@ testsamples = 200
 training = 1000
 max = 1501
 predict = 5
-hidden_neurons = 8
+hidden_neurons1 = 4
+hidden_neurons2 = 4
 eta = 0.001
 output_nodes = 1
 momen = 0.5
+sigma = 0.03
 
 def generate_input(x):
     t = np.arange(301,1501)
+    #sigma 0.03, 0.09, 0.18
+
     input = np.array([x[t-20], x[t-15], x[t-10], x[t-5], x[t]])
+
+    input += np.random.normal(0, sigma,(predict,samples))
+
     output = x[t + predict]
+    output = x[t + predict] +  np.random.normal(0, sigma,samples)
+
     return input, output
 
 
@@ -82,27 +91,27 @@ def calculate_error(Y, T):
 def model_the_fucking_data(training_data, target_data, test_x, test_t, epoch=1000,drop_out=True):
 
     model = keras.Sequential()
+    #first
     model.add(keras.Input(shape=(5, )))
-    model.add(keras.layers.Dense(hidden_neurons))
+    #2nd
+    model.add(keras.layers.Dense(hidden_neurons1))
+    if(drop_out):
+        model.add(keras.layers.Dropout(0.1))
+    #third
+    model.add(keras.layers.Dense(hidden_neurons2))
     if(drop_out):
         model.add(keras.layers.Dropout(0.25))
+    #Output layer
     model.add(keras.layers.Dense(output_nodes))
     sgd = keras.optimizers.SGD(learning_rate=eta, momentum=momen)
     early_ritsch = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
     model.compile(optimizer=sgd,
                     loss='mse')
     start_t = time.time()
-    hist = model.fit(training_data, target_data, epochs=epoch, batch_size=32, verbose=1, validation_split=0.2, callbacks=[early_ritsch])
+    hist = model.fit(training_data, target_data, epochs=epoch, batch_size=32, verbose=0, validation_split=0.2, callbacks=[early_ritsch])
     end_t = time.time()
     print('time tooked: ', end_t - start_t)
     prediction_van_darkholme = model.predict(test_x)
-    # i van darkholme har vi alla predictions. sen gör vi MSE med predictions och test_t DETTA GER OSS MSE för test
-    #
-    #
-    #
-    #
-    # TO DO:
-    # AVERGAE MSE FOR HIST-HISTORY otherwise we just check smallest. FOR PREDICTION WE DO MSE OVER ALL THINGS SO IT IS LIKE AVERAGE
 
     print(f"Training MSE: {average_mse(hist.history['val_loss'])}")
     print(f"Testing MSE: {calculate_error(prediction_van_darkholme.T, test_t)}")
