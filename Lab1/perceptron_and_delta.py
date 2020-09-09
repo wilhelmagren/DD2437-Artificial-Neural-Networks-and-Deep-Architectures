@@ -196,7 +196,7 @@ def plot_all(X, W, do_delta, do_batch, eta=0.001, iteration=0):
         if do_batch:
             plt.title(f"Delta rule BATCH: eta = {eta}, epoch = {iteration}")
         else:
-            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch*num_iterations = {iteration*2*n}")
+            plt.title(f"Delta rule SEQUENTIAL: eta = {eta}, epoch*num_iterations = {iteration}")
     else:
         plt.title(f"Perceptron learning rule: eta = {eta}, epoch = {iteration}")
     plt.xlabel("x")
@@ -428,14 +428,16 @@ def perform_delta(X, W, T, eta, do_batch, non_separable):
     if do_batch:
         #plot_sets(X, W, True, True, eta)
         new_weight, error_list, iteration_list = delta_learning(X, W, T, eta, non_separable)
-        plot_sets(X, new_weight, True, True, eta, iteration_list[-1])
+        plot_all(X, new_weight, True, True, eta, iteration_list[-1])
         #plot_error_over_iterations(error_list, iteration_list)
         print("    |-> training done.")
         return new_weight, error_list
     else:
         #plot_all(X, W, True, False, eta)
         new_weight, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
-        plot_all(X, new_weight, True, False, eta, iteration_list[-1])
+        print(len(iteration_list)/200)
+        epoch = len(iteration_list)/(2*n)
+        plot_all(X, new_weight, True, False, eta, epoch)
         #plot_error_over_iterations(error_list, iteration_list)
         print("    |-> training done.")
         return new_weight, error_list
