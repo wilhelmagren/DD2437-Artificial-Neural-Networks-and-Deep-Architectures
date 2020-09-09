@@ -33,7 +33,7 @@ Assignment - Part 1
             innebär att vi behöver sätta mA[] & mB[] så att offsetten för de två setten gör att dom inte ligger allt för nära omkring origo.
 """
 n = 100
-mA = [0.5, -0.5]
+mA = [2, 0.0]
 mB = [0.5, -0.5]
 sigmaA = 0.5
 sigmaB = 0.5
@@ -287,7 +287,7 @@ def delta_learning(X, W, T, eta, non_separable):
     iteration = 0
     errors = []
     iterations = []
-    accuracy_list = []
+    #accuracy_list = []
     while not converged:
         # Plot the perceptron line after each 5 iteration
         #if (iteration % 5) == 0:
@@ -298,8 +298,8 @@ def delta_learning(X, W, T, eta, non_separable):
         prev_error = calculate_error(X, prev_W, T)
         new_error = calculate_error(X, W, T)
         if check_convergence(prev_error, new_error):
-            return W, iteration, errors, iterations, accuracy_list
-        accuracy_list.append(calc_accuracy(X, W, T, non_separable))
+            return W, errors, iterations
+        #accuracy_list.append(calc_accuracy(X, W, T, non_separable))
         errors.append(new_error)
         iterations.append(iteration)
         iteration += 1
@@ -319,21 +319,21 @@ def delta_sequential_learning(X, W, T, eta):
         # Plot the perceptron line after each 5 iteration
         #if (iteration % 2) == 0:
             #plot_all(X, W, True, eta, iteration)
-        iteration += 1
-        prev_error = calculate_error(X, W, T)
         for column in range(2*n):
             prev_W = W
             column_x = np.ones([3, 1])
             column_x[0][0] = X[0][column]
             column_x[1][0] = X[1][column]
             column_x[2][0] = X[2][column]
+            prev_error = calculate_error(column_x, W, T)
             W = prev_W + -eta*(W@column_x - T[0][column])*np.transpose(column_x)
-        
-        new_error = calculate_error(X, W, T)
-        errors.append(new_error)
-        iterations.append(iteration)
-        if check_convergence(prev_error, new_error):
-            return W, iteration, errors, iterations
+            new_error = calculate_error(column_x, W, T)
+            errors.append(new_error)
+            iterations.append(iteration)
+            iteration += 1
+
+            if check_convergence(prev_error, new_error):
+                return W, errors, iterations
 
 
 def perceptron_rule(X, E, eta):
@@ -426,27 +426,29 @@ def perform_delta(X, W, T, eta, do_batch, non_separable):
     """
     print("    |-> starting training...")
     if do_batch:
-        plot_sets(X, W, True, True, eta)
-        new_weight, number_of_iterations, error_list, iteration_list, acc_list = delta_learning(X, W, T, eta, non_separable)
-        plot_sets(X, new_weight, True, True, eta, number_of_iterations)
-        plot_error_over_iterations(error_list, iteration_list)
+        #plot_sets(X, W, True, True, eta)
+        new_weight, error_list, iteration_list = delta_learning(X, W, T, eta, non_separable)
+        plot_sets(X, new_weight, True, True, eta, iteration_list[-1])
+        #plot_error_over_iterations(error_list, iteration_list)
         print("    |-> training done.")
-        return new_weight, error_list, acc_list
+        return new_weight, error_list
     else:
-        plot_all(X, W, True, False, eta)
-        new_weight, number_of_iterations, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
-        plot_all(X, new_weight, True, False, eta, number_of_iterations)
-        plot_error_over_iterations(error_list, iteration_list)
+        #plot_all(X, W, True, False, eta)
+        new_weight, error_list, iteration_list = delta_sequential_learning(X, W, T, eta)
+        plot_all(X, new_weight, True, False, eta, iteration_list[-1])
+        #plot_error_over_iterations(error_list, iteration_list)
         print("    |-> training done.")
         return new_weight, error_list
 
 def main():
     learning_rate = 0.001
     X, W, T = generate_matrices()
-    print("err.str\n    |-> performing perceptron learning...")
-    perform_perceptron(X, W, T, learning_rate, False)
+    print("err.str\n    |-> performing sequential...")
+    ww, err_seq_l = perform_delta(X, W, T, learning_rate, False, False)
     print("err.str\n    |-> performing delta batch learning...")
-    err_batch = perform_delta(X, W, T, learning_rate, True)
+    www, err_l = perform_delta(X, W, T, learning_rate, True, False)
+    print(f"Sequential mode num epochs: {len(err_seq_l)/(2*n)}")
+    print(f"Batch mode num epochs: {len(err_l)}")
     #print("err.str\n    |-> performing delta sequential learning...")
     #err_seq = perform_delta(X, W, T, learning_rate, False)
     #plot_diff(err_batch, err_seq)
