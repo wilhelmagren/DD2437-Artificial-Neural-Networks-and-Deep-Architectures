@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 """
  Use Gaussian RBF's to approximate simple functions of one variable.
     Every unit in the hidden layer implement the transfer function phi_i(x)
@@ -29,12 +28,9 @@ import matplotlib.pyplot as plt
        Is it good to use this measure when evaluating the performance of the network? Explain!
 
  Two different methods for determining the weights w_i:
-    batch modde using least squares
+    batch mode using least squares
     sequential (instrumental, on-line) learning using the delta rule
-"""
-
-def least_squares():
-    """
+    
         We can write the system of linear equations as: PHI * w = f
 
                     ----------------------------------------
@@ -52,16 +48,158 @@ def least_squares():
 
         According to linear algebra - obtain W by solving the following system:
             PHI^T * PHI * W = PHI^T * f
+"""
+
+# Global variables don't touch please
+N = 63  # Number of inputs
+n = 64  # Number of RBF's, has to be greater than N
+step_size = 0.1  # Used for generating sin wave
+sigma = 0.1  # Variance for all nodes
+
+
+def generate_input():
     """
+    Func generate_input/0
+    @spec generate_input() :: np.array(), np.array(), np.array(), np.array(), np.array(), np.array()
+        Generate all necessary training, testing and target data used in the training and validation process.
+    """
+    x_training = np.arange(0, 2 * np.pi, step_size)
+    x_testing = np.arange(0.05, 2 * np.pi + 0.05, step_size)
+    training_target_sin = np.sin(2*x_training)
+    testing_target_sin = np.sin(2*x_testing)
+    square_training_target = np.sign(training_target_sin)
+    square_testing_target = np.sign(testing_target_sin)
+    for i in range(len(square_training_target)):
+        if square_training_target[i] == 0:
+            square_training_target[i] = 1
+    for i in range(len(square_testing_target)):
+        if square_testing_target[i] == 0:
+            square_testing_target[i] = 1
+
+    return x_training, x_testing, training_target_sin, testing_target_sin, square_training_target, square_testing_target
 
 
-def perform_task():
-    print("### --- Doing the thing --- ###")
+def phi_func(x, my):
+    return np.exp(-(x - my)**2 / (2*(sigma ** 2)))
+
+
+def generate_big_phi(input_matrix, rbf_pos):
+    """
+    Func generate_big_phi/2
+    @spec generate_big_phi(np.array(), np.array()) :: np.array()
+        Calculates and generates the Gaussian RBF phi matrix based on the transfer function given in the lab instructions.
+    """
+    big_phi_matrix = np.zeros([N, n])
+    for i in range(N):
+        for j in range(n):
+            big_phi_matrix[i][j] = phi_func(input_matrix[i], rbf_pos[j])
+    return big_phi_matrix
+
+
+def generate_weight():
+    """
+    Func generate_weight/0
+    @spec generate_weight() :: np.array()
+        Generates a gaussian distributed numpy array with weight values.
+    """
+    return np.random.normal(0, sigma, [1, n])
+
+
+def generate_initial_rbf_position():
+    """
+    Func generate_initial_rbf_position/0
+    @spec generate_initial_rbf_position() :: np.array()
+        Generate a uniformed list of starting positions for the RBF's
+
+        TODO: Find out how to most accurately position the RBF's to predict the target function
+    """
+    rbf_pos = np.random.uniform(0, 2*np.pi, n)
+    return rbf_pos
+
+
+def calc_total_error(phi, w, target):
+    """
+    The function error becomes:
+            total error = ||PHI*w - f||^2
+    """
+    return np.abs(np.subtract(phi@w, target)).mean()
+
+
+def least_squares(phi, target):
+    """
+    Func least_squares/2
+    @spec least_squares(np.array(), np.array()) :: np.array()
+        Calculates the weight matrix w by solving the given systems of linear equations.
+    """
+    return np.linalg.solve(phi.T @ phi, phi.T @ target)
+
+
+def plot_approximation(estimate, target):
+    """
+    Func plot_approximation/2
+    @spec plot_approximation(list, list) :: void
+        Plot the function approximation estimate over the target function.
+    """
+    plt.plot(estimate, label="Estimate", color="red")
+    plt.plot(target, label="Target", color="blue")
+    plt.title("Estimate vs target")
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+
+def plot_error(err, it):
+    """
+    Func plot_error/2
+    @spec plot_error(list, list) :: void
+        Plots the calculated errors over the corresponding iteration in learning process.
+        Used to visualize the convergence of the error function E.
+    """
+    plt.ylim(50, -5)
+    # plt.plot(x, y, ...)
+    plt.plot(it, err, color="green")
+    plt.xlabel("Number of units")
+    plt.ylabel("Error")
+    plt.title("Error ratio over number units")
+    plt.grid()
+    plt.show()
+
+
+def perform_least_squared():
+    """
+    Func perform_least_squared/0
+        Change code to work for 'box'-function instead of sinus.
+
+        TODO: debunk why the RBF position is good for the domain [0, pi/2] and not for the rest... also why 0.06 convergence?
+    """
+    print("### --- Doing the least squared --- ###")
+    train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
+    err_list = []
+    iteration_list = []
+    iteration = 0
+    for q in range(100):
+        rbf_pos = generate_initial_rbf_position()
+        big_phi = generate_big_phi(train_x, rbf_pos)
+        w = least_squares(big_phi, sin_train_t)
+        new_bigger_phi = generate_big_phi(test_x, rbf_pos)
+        err_list.append(calc_total_error(new_bigger_phi, w, sin_train_t))
+        print(err_list[iteration])
+        global n
+        iteration_list.append(iteration + n)
+        iteration += 1
+        if q == 99:
+            print(f"Number of RBF's: [{n}] and mean error [0.01]")
+            estimation = new_bigger_phi@w
+            return estimation, sin_train_t, err_list, iteration_list
+        n += 1
 
 
 def main():
-    perform_task()
+
+    est, tar, error_lists, it_list = perform_least_squared()
+    plot_error(error_lists, it_list)
+    plot_approximation(est, tar)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
