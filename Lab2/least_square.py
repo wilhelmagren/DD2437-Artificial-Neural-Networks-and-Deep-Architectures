@@ -52,9 +52,9 @@ import matplotlib.pyplot as plt
 
 # Global variables don't touch please
 N = 63  # Number of inputs
-n = 64  # Number of RBF's, has to be greater than N
+n = 1  # Number of RBF's, has to be greater than N
 step_size = 0.1  # Used for generating sin wave
-sigma = 0.1  # Variance for all nodes
+sigma = 1.0  # Variance for all nodes
 
 
 def generate_input():
@@ -117,12 +117,12 @@ def generate_initial_rbf_position():
     return rbf_pos
 
 
-def calc_total_error(phi, w, target):
+def calc_total_error(estimation, target):
     """
     The function error becomes:
             total error = ||PHI*w - f||^2
     """
-    return np.abs(np.subtract(phi@w, target)).mean()
+    return np.abs(np.subtract(estimation, target)).mean()
 
 
 def least_squares(phi, target):
@@ -140,6 +140,7 @@ def plot_approximation(estimate, target):
     @spec plot_approximation(list, list) :: void
         Plot the function approximation estimate over the target function.
     """
+    print(estimate)
     plt.plot(estimate, label="Estimate", color="red")
     plt.plot(target, label="Target", color="blue")
     plt.title("Estimate vs target")
@@ -155,7 +156,7 @@ def plot_error(err, it):
         Plots the calculated errors over the corresponding iteration in learning process.
         Used to visualize the convergence of the error function E.
     """
-    plt.ylim(50, -5)
+    plt.ylim(top=-0.1, bottom=1)
     # plt.plot(x, y, ...)
     plt.plot(it, err, color="green")
     plt.xlabel("Number of units")
@@ -165,7 +166,7 @@ def plot_error(err, it):
     plt.show()
 
 
-def perform_least_squared():
+def perform_least_squared(squared=False):
     """
     Func perform_least_squared/0
         Change code to work for 'box'-function instead of sinus.
@@ -177,27 +178,63 @@ def perform_least_squared():
     err_list = []
     iteration_list = []
     iteration = 0
+    global n
     for q in range(100):
-        rbf_pos = generate_initial_rbf_position()
-        big_phi = generate_big_phi(train_x, rbf_pos)
-        w = least_squares(big_phi, sin_train_t)
-        new_bigger_phi = generate_big_phi(test_x, rbf_pos)
-        err_list.append(calc_total_error(new_bigger_phi, w, sin_train_t))
-        print(err_list[iteration])
-        global n
-        iteration_list.append(iteration + n)
-        iteration += 1
-        if q == 99:
-            print(f"Number of RBF's: [{n}] and mean error [0.01]")
-            estimation = new_bigger_phi@w
-            return estimation, sin_train_t, err_list, iteration_list
-        n += 1
+        if not squared:
+            rbf_pos = generate_initial_rbf_position()
+            big_phi = generate_big_phi(train_x, rbf_pos)
+            w = least_squares(big_phi, sin_train_t)
+            test_phi = generate_big_phi(test_x, rbf_pos)
+            estimation = test_phi @ w
+            err_list.append(calc_total_error(estimation, sin_test_t))
+            print(err_list[iteration])
+            iteration_list.append(iteration + n)
+            iteration += 1
+            if err_list[iteration - 1] <= 0.001:
+                print(f"Number of RBF's: [{n}] and error [0.001]")
+                return estimation, sin_test_t, err_list, iteration_list, rbf_pos
+            n += 1
+        else:
+            print(iteration)
+            print(n)
+            rbf_pos = generate_initial_rbf_position()
+            big_phi = generate_big_phi(train_x, rbf_pos)
+            w = least_squares(big_phi, square_train_t)
+            test_phi = generate_big_phi(test_x, rbf_pos)
+            estimation = test_phi @ w
+            for i in range(len(estimation)):
+                if estimation[i] >= 0:
+                    estimation[i] = 1
+                else:
+                    estimation[i] = -1
+            err_list.append(calc_total_error(estimation, square_test_t))
+            print(err_list[iteration])
+            iteration_list.append(iteration + n)
+            iteration += 1
+            if err_list[iteration - 1] <= 0.01:
+                print(f"Number of RBF's: [{n}]")
+                return estimation, square_test_t, err_list, iteration_list, rbf_pos
+            n += 1
+
+
+def plot_rbf_pos(rbf):
+    """
+    Func plot_rbf_pos/1
+    @spec plot_approximation(list) :: void
+        Plot the RBF positions in the x-y plane
+    """
+    for i in range(len(rbf)):
+        plt.scatter(rbf[i][0], rbf[i][1], color="red")
+    plt.title("RBF positions")
+    plt.grid()
+    plt.legend()
+    plt.show()
 
 
 def main():
-
-    est, tar, error_lists, it_list = perform_least_squared()
+    est, tar, error_lists, it_list, rbf_positions = perform_least_squared(True)
     plot_error(error_lists, it_list)
+    # plot_rbf_pos(rbf_positions)
     plot_approximation(est, tar)
 
 
