@@ -52,9 +52,9 @@ import matplotlib.pyplot as plt
 
 # Global variables don't touch please
 N = 63  # Number of inputs
-n = 25  # Number of RBF's, has to be greater than N
+n = 1  # Number of RBF's, has to be greater than N
 step_size = 0.1  # Used for generating sin wave
-sigma = 0.5  # Variance for all nodes
+sigma = 2  # Variance for all nodes
 
 
 def generate_input(use_noise=True):
@@ -105,7 +105,7 @@ def delta_rule(square):
     error = 0
     estimation = []
     for i in range(epochs):
-        print(f" Epoch number: [{i}]")
+        # print(f" Epoch number: [{i}]")
         if not square:
             for k in range(train_size):
                 # print(f" k number: [{k}]")
@@ -120,22 +120,9 @@ def delta_rule(square):
                 # k = (k + 1) % train_size
                 delta_w = delta_learning_rule(e, phi_test, k, 0.001)
                 w += delta_w
-        if not square:
-            estimation = phi_test @ w
-            error = np.abs(estimation - sin_test_t).mean()
-            print(f"Epoch number [{i}] has error: [{error}]")
-        else:
-            estimation = phi_test @ w
-            for j in range(len(estimation)):
-                if estimation[j] >= 0:
-                    estimation[j] = 1
-                else:
-                    estimation[j] = -1
-            error = np.abs(estimation - square_test_t).mean()
-            print(f"Epoch number [{i}] has error: [{error}]")
-    """if not square:
-        estimate = phi_test @ w
-        error = np.abs(estimate-sin_test_t).mean()
+    if not square:
+        estimation = phi_test @ w
+        error = np.abs(estimation-sin_test_t).mean()
     else:
         estimation = phi_test @ w
         for i in range(len(estimation)):
@@ -143,8 +130,8 @@ def delta_rule(square):
                 estimation[i] = 1
             else:
                 estimation[i] = -1
-        error = np.abs(estimation-square_test_t).mean()"""
-    return sin_test_t, estimation
+        error = np.abs(estimation-square_test_t).mean()
+    return error, sin_test_t, estimation
 
 
 def generate_big_phi(input_matrix, rbf_pos):
@@ -294,8 +281,16 @@ def plot_rbf_pos(rbf):
 
 
 def main():
-    target, est = delta_rule(False)
-    plot_approximation(est, target)
+    global n
+    error_list = []
+    for i in range(50):
+        print(f"n is: [{n}] and sigmaballs is: [{sigma}]")
+        error, target, est = delta_rule(False)
+        error_list.append(error)
+        print(f"    error is: [{error}]")
+        # plot_approximation(est, target)
+        n += 1
+    plot_error(error_list, [i for i in range(50)])
     # est, tar, error_lists, it_list, rbf_positions = perform_least_squared(True)
     # plot_error(error_lists, it_list)
     # plot_rbf_pos(rbf_positions)
