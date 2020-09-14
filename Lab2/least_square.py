@@ -52,9 +52,9 @@ import matplotlib.pyplot as plt
 
 # Global variables don't touch please
 N = 63  # Number of inputs
-n = 1  # Number of RBF's, has to be greater than N
+n = 25  # Number of RBF's, has to be greater than N
 step_size = 0.1  # Used for generating sin wave
-sigma = 1.0  # Variance for all nodes
+sigma = 0.8  # Variance for all nodes
 
 
 def generate_input(use_noise=True):
@@ -87,18 +87,44 @@ def phi_func(x, my):
     return np.exp(-(x - my)**2 / (2*(sigma ** 2)))
 def calculate_error(target,estimate):
     return 1/2*((target-estimate)**2)
-def delta_rule(eta):
+def delta_learning_rule(error,phi,k,eta):
+    print(phi[k])
+    return eta*error*phi[k]
+def delta_rule(square):
     train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
     w = generate_weight()
     rbf_pos = generate_initial_rbf_position()
     phi_test = generate_big_phi(test_x, rbf_pos)
     phi_train = generate_big_phi(train_x, rbf_pos)
-    error = []
-    for i in range(50):
-        delta_w = eta*(square_train_t - phi_train.T@w)@phi_train
-        w += delta_w
-        estimate = phi_test@w
-        error = calculate_error(sin_test_t,estimate)
+    epochs = 10000
+    train_size = len(train_x)
+    k = 0
+    for i in range(epochs):
+        if not square:
+            e = sin_train_t[k] - phi_train[k]@w
+            k = (k+1) % train_size
+            delta_w = delta_learning_rule(e,phi_test,k,0.001)
+            w += delta_w
+            #print(w)
+        else:
+            e = square_train_t[k] - phi_train[k] @ w
+            k = (k + 1) % train_size
+            delta_w = delta_learning_rule(e, phi_test, k,0.001)
+            w += delta_w
+
+    if not square:
+        estimate = phi_test @ w
+        error = np.abs(estimate-sin_test_t).mean()
+    else:
+        estimation = phi_test @ w
+        for i in range(len(estimation)):
+            if estimation[i] >= 0:
+                estimation[i] = 1
+            else:
+                estimation[i] = -1
+        error = np.abs(estimation-square_test_t).mean()
+    return error
+
 
 
 
@@ -252,10 +278,12 @@ def plot_rbf_pos(rbf):
 
 
 def main():
-    est, tar, error_lists, it_list, rbf_positions = perform_least_squared(True)
-    plot_error(error_lists, it_list)
+    error = delta_rule(False)
+    print(error)
+    #est, tar, error_lists, it_list, rbf_positions = perform_least_squared(True)
+    #plot_error(error_lists, it_list)
     # plot_rbf_pos(rbf_positions)
-    plot_approximation(est, tar)
+    #plot_approximation(est, tar)
 
 
 if __name__ == "__main__":
