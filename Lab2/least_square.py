@@ -57,7 +57,7 @@ step_size = 0.1  # Used for generating sin wave
 sigma = 0.5  # Variance for all nodes
 
 
-def generate_input(use_noise=False):
+def generate_input(use_noise=True):
     """
     Func generate_input/0
     @spec generate_input() :: np.array(), np.array(), np.array(), np.array(), np.array(), np.array()
@@ -86,7 +86,7 @@ def phi_func(x, my):
     return np.exp(-(x - my)**2 / (2*(sigma ** 2)))
 
 
-def calculate_error(target,estimate):
+def calculate_error(target, estimate):
     return 1/2*((target-estimate)**2)
 
 
@@ -218,7 +218,7 @@ def plot_error(err, it):
     plt.show()
 
 
-def perform_least_squared(squared=False):
+def perform_least_squared(squared=True):
     """
     Func perform_least_squared/0
         Change code to work for 'box'-function instead of sinus.
@@ -238,13 +238,11 @@ def perform_least_squared(squared=False):
             test_phi = generate_big_phi(test_x, rbf_pos)
             estimation = test_phi @ w
             err_list.append(calc_total_error(estimation, sin_test_t))
-            print(err_list[iteration])
+            #print(err_list[iteration])
             iteration_list.append(iteration + n)
             iteration += 1
             n += 1
         else:
-            print(iteration)
-            print(n)
             rbf_pos = generate_initial_rbf_position()
             big_phi = generate_big_phi(train_x, rbf_pos)
             w = least_squares(big_phi, square_train_t)
@@ -256,14 +254,10 @@ def perform_least_squared(squared=False):
                 else:
                     estimation[i] = -1
             err_list.append(calc_total_error(estimation, square_test_t))
-            print(err_list[iteration])
-            iteration_list.append(iteration + n)
+            #print(err_list[iteration])
+            iteration_list.append(iteration)
             iteration += 1
-            if err_list[iteration - 1] <= 0.01:
-                print(f"Number of RBF's: [{n}]")
-                return estimation, square_test_t, err_list, iteration_list, rbf_pos
-            n += 1
-    return estimation, sin_test_t, err_list, iteration_list
+    return estimation, square_test_t, err_list, iteration_list
 
 
 def plot_rbf_pos(rbf):
@@ -286,6 +280,8 @@ def place_rbf_hand_job():
 
 def main():
     global n
+    ls_estimation, ls_square_test_t, ls_err_list, ls_iteration_list = perform_least_squared()
+    plot_approximation(ls_estimation, ls_square_test_t)
     # error_list = []
     # for i in range(50):
     #    print(f"n is: [{n}] and sigmaballs is: [{sigma}]")
@@ -299,12 +295,12 @@ def main():
     # print(n)
     # ls_estimation, ls_square_test_t, ls_err_list, ls_iteration_list = perform_least_squared()
     # plot_error(ls_err_list, ls_iteration_list)
-    sum = 0
-    for i in range(10):
-        err, target, estimation = delta_rule(False)
-        sum += err
-        print(err)
-    print("The average is: {}".format(sum/10))
+    # sum = 0
+    #for i in range(10):
+    #    err, target, estimation = delta_rule(False)
+    #    sum += err
+    #    print(err)
+    # print("The average is: {}".format(sum/10))
     # est, tar, error_lists, it_list, rbf_positions = perform_least_squared(True)
     # plot_error(error_lists, it_list)
     # plot_rbf_pos(rbf_positions)
