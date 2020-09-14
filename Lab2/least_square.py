@@ -57,7 +57,7 @@ step_size = 0.1  # Used for generating sin wave
 sigma = 1.0  # Variance for all nodes
 
 
-def generate_input():
+def generate_input(use_noise=True):
     """
     Func generate_input/0
     @spec generate_input() :: np.array(), np.array(), np.array(), np.array(), np.array(), np.array()
@@ -65,10 +65,13 @@ def generate_input():
     """
     x_training = np.arange(0, 2 * np.pi, step_size)
     x_testing = np.arange(0.05, 2 * np.pi + 0.05, step_size)
-    training_target_sin = np.sin(2*x_training)
-    testing_target_sin = np.sin(2*x_testing)
+    training_target_sin = np.sin(2 * x_training)
+    testing_target_sin = np.sin(2 * x_testing)
     square_training_target = np.sign(training_target_sin)
     square_testing_target = np.sign(testing_target_sin)
+    if use_noise:
+        x_training += np.random.normal(0, 0.1, (x_training.shape))
+        x_testing += np.random.normal(0, 0.1, (x_testing.shape))
     for i in range(len(square_training_target)):
         if square_training_target[i] == 0:
             square_training_target[i] = 1
@@ -76,11 +79,28 @@ def generate_input():
         if square_testing_target[i] == 0:
             square_testing_target[i] = 1
 
+
     return x_training, x_testing, training_target_sin, testing_target_sin, square_training_target, square_testing_target
 
 
 def phi_func(x, my):
     return np.exp(-(x - my)**2 / (2*(sigma ** 2)))
+def calculate_error(target,estimate):
+    return 1/2*((target-estimate)**2)
+def delta_rule(eta):
+    train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
+    w = generate_weight()
+    rbf_pos = generate_initial_rbf_position()
+    phi_test = generate_big_phi(test_x, rbf_pos)
+    phi_train = generate_big_phi(train_x, rbf_pos)
+    error = []
+    for i in range(50):
+        delta_w = eta*(square_train_t - phi_train.T@w)@phi_train
+        w += delta_w
+        estimate = phi_test@w
+        error = calculate_error(sin_test_t,estimate)
+
+
 
 
 def generate_big_phi(input_matrix, rbf_pos):
@@ -102,7 +122,7 @@ def generate_weight():
     @spec generate_weight() :: np.array()
         Generates a gaussian distributed numpy array with weight values.
     """
-    return np.random.normal(0, sigma, [1, n])
+    return np.random.uniform(0, 2*np.pi, n)
 
 
 def generate_initial_rbf_position():
