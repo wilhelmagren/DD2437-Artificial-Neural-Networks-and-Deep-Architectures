@@ -52,12 +52,12 @@ import matplotlib.pyplot as plt
 
 # Global variables don't touch please
 N = 63  # Number of inputs
-n = 1  # Number of RBF's, has to be greater than N
+n = 8  # Number of RBF's, has to be greater than N
 step_size = 0.1  # Used for generating sin wave
-sigma = 2  # Variance for all nodes
+sigma = 0.5  # Variance for all nodes
 
 
-def generate_input(use_noise=True):
+def generate_input(use_noise=False):
     """
     Func generate_input/0
     @spec generate_input() :: np.array(), np.array(), np.array(), np.array(), np.array(), np.array()
@@ -97,10 +97,11 @@ def delta_learning_rule(error, phi, k, eta):
 def delta_rule(square):
     train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
     w = generate_weight()
-    rbf_pos = generate_initial_rbf_position()
+    #rbf_pos = generate_initial_rbf_position()
+    rbf_pos = place_rbf_hand_job()
     phi_test = generate_big_phi(test_x, rbf_pos)
     phi_train = generate_big_phi(train_x, rbf_pos)
-    epochs = 1000
+    epochs = 100
     train_size = len(train_x)
     error = 0
     estimation = []
@@ -111,14 +112,14 @@ def delta_rule(square):
                 # print(f" k number: [{k}]")
                 e = sin_train_t[k] - phi_train[k]@w
                 # k = (k+1) % train_size
-                delta_w = delta_learning_rule(e, phi_test, k, 0.001)
+                delta_w = delta_learning_rule(e, phi_test, k, 0.1)
                 w += delta_w
         else:
             for k in range(train_size):
                 # print(f" k number: [{k}]")
                 e = square_train_t[k] - phi_train[k] @ w
                 # k = (k + 1) % train_size
-                delta_w = delta_learning_rule(e, phi_test, k, 0.001)
+                delta_w = delta_learning_rule(e, phi_test, k, 0.1)
                 w += delta_w
     if not square:
         estimation = phi_test @ w
@@ -227,8 +228,9 @@ def perform_least_squared(squared=False):
     err_list = []
     iteration_list = []
     iteration = 0
+    estimation = []
     global n
-    for q in range(100):
+    for q in range(50):
         if not squared:
             rbf_pos = generate_initial_rbf_position()
             big_phi = generate_big_phi(train_x, rbf_pos)
@@ -239,9 +241,6 @@ def perform_least_squared(squared=False):
             print(err_list[iteration])
             iteration_list.append(iteration + n)
             iteration += 1
-            if err_list[iteration - 1] <= 0.001:
-                print(f"Number of RBF's: [{n}] and error [0.001]")
-                return estimation, sin_test_t, err_list, iteration_list, rbf_pos
             n += 1
         else:
             print(iteration)
@@ -264,6 +263,7 @@ def perform_least_squared(squared=False):
                 print(f"Number of RBF's: [{n}]")
                 return estimation, square_test_t, err_list, iteration_list, rbf_pos
             n += 1
+    return estimation, sin_test_t, err_list, iteration_list
 
 
 def plot_rbf_pos(rbf):
@@ -280,17 +280,31 @@ def plot_rbf_pos(rbf):
     plt.show()
 
 
+def place_rbf_hand_job():
+    return np.array([0, np.pi/4, np.pi/2, 3*np.pi/4, np.pi, 5*np.pi/4, 3*np.pi/2, 7*np.pi/4])
+
+
 def main():
     global n
-    error_list = []
-    for i in range(50):
-        print(f"n is: [{n}] and sigmaballs is: [{sigma}]")
-        error, target, est = delta_rule(False)
-        error_list.append(error)
-        print(f"    error is: [{error}]")
-        # plot_approximation(est, target)
-        n += 1
-    plot_error(error_list, [i for i in range(50)])
+    # error_list = []
+    # for i in range(50):
+    #    print(f"n is: [{n}] and sigmaballs is: [{sigma}]")
+    #    error, target, est = delta_rule(False)
+    #    error_list.append(error)
+    #    print(f"    error is: [{error}]")
+    #    # plot_approximation(est, target)
+    #    n += 1
+    # plot_error(error_list, [i for i in range(50)])
+    # n = 1
+    # print(n)
+    # ls_estimation, ls_square_test_t, ls_err_list, ls_iteration_list = perform_least_squared()
+    # plot_error(ls_err_list, ls_iteration_list)
+    sum = 0
+    for i in range(10):
+        err, target, estimation = delta_rule(False)
+        sum += err
+        print(err)
+    print("The average is: {}".format(sum/10))
     # est, tar, error_lists, it_list, rbf_positions = perform_least_squared(True)
     # plot_error(error_lists, it_list)
     # plot_rbf_pos(rbf_positions)
