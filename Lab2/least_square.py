@@ -97,7 +97,7 @@ def delta_learning_rule(error, phi, k, eta):
 def delta_rule(square):
     train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
     w = generate_weight()
-    #rbf_pos = generate_initial_rbf_position()
+    # rbf_pos = generate_initial_rbf_position()
     rbf_pos = place_rbf_hand_job()
     phi_test = generate_big_phi(test_x, rbf_pos)
     phi_train = generate_big_phi(train_x, rbf_pos)

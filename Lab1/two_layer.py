@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits import mplot3d
 n = 100
-iterations = 1000
-hidden_neurons = 20
+iterations = 100
+hidden_neurons = 8
 mA = [-2.0, 0.0]
 mB = [0.0, 0.0]
 sigmaA = 0.2
@@ -16,6 +16,7 @@ learning_rate = 0.001
 
 def phi(x):
     return (2 / (1 + np.exp(-x))) - 1
+
 
 def split_data(X,T,ratio):
     np.random.shuffle(X)
@@ -29,6 +30,7 @@ def split_data(X,T,ratio):
     T = np.atleast_2d(np.exp(-x_train* x_train * 0.1) * np.exp(-y_train * y_train * 0.1) - 0.5)
     W = np.random.normal(1, 0.5, (hidden_neurons, train_matrix.shape[0]))
     return train_matrix,W,T
+
 
 def gauss_func():
     fig = plt.figure()
@@ -106,7 +108,7 @@ def update_weights(V, W, delta_W, delta_V):
 
 
 def calculate_error(X, W, T):
-    return np.sum((T - W@X) ** 2).mean
+    return np.sum((T - W@X) ** 2).mean()
 
 
 def mse_encoder(X, T, W, V):
@@ -142,10 +144,11 @@ def auto_encode(epoch,eta):
     o_out = np.sign(o_out)
 
 
-def two_layer_train(X, T, W, V, epoch, eta):
+def two_layer_train(X, T, W, V, epoch=50000, eta=0.01):
     acc_list = []
     iterations = []
     error_list = []
+    o_out = 0
     for i in range(epoch):
         # print(W)
         # print(V)
@@ -160,7 +163,7 @@ def two_layer_train(X, T, W, V, epoch, eta):
         V, W = update_weights(V,W,delta_W,delta_V)
         new_error = calculate_error(X, W, T)
         error_list.append(new_error)
-        acc_list.append(calc_accuracy(X, W, V, T))
+        #acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
         """if (i%1000) == 0:
             # PLOT O_OUT
@@ -175,7 +178,7 @@ def two_layer_train(X, T, W, V, epoch, eta):
                                    linewidth=0, antialiased=False)
             plt.show()
         #print(calc_accuracy(X,W,V,T))"""
-    return W, V,error_list,iterations
+    return W, V, error_list, iterations, o_out
 
 
 def plot_all_two_layer(X, W, eta=0.001, iteration=0):
@@ -273,6 +276,42 @@ def plot_mean_squared_error(error_list, iteration_list):
     plt.show()
 
 
+step_size = 0.1
+
+
+def generate_input(use_noise=True):
+    """
+    Func generate_input/0
+    @spec generate_input() :: np.array(), np.array(), np.array(), np.array(), np.array(), np.array()
+        Generate all necessary training, testing and target data used in the training and validation process.
+    """
+    x_training = np.ones([2, 63])
+    x_training[0] = np.arange(0, 2 * np.pi, step_size)
+
+    x_testing = np.ones([2, 63])
+    x_testing[0] = np.arange(0.05, 2 * np.pi, step_size)
+
+    training_target_sin = np.sin(2 * x_training[0])
+    testing_target_sin = np.sin(2 * x_testing[0])
+
+    square_training_target = np.sign(training_target_sin)
+    square_testing_target = np.sign(testing_target_sin)
+
+    if use_noise:
+        x_training[0] += np.random.normal(0, 0.1, x_training[0].shape)
+        x_testing[0] += np.random.normal(0, 0.1, x_testing[0].shape)
+    for i in range(len(square_training_target)):
+        if square_training_target[i] == 0:
+            square_training_target[i] = 1
+    for i in range(len(square_testing_target)):
+        if square_testing_target[i] == 0:
+            square_testing_target[i] = 1
+
+    W = np.random.normal(0, 1, [8, 2])
+    V = np.random.normal(0, 1, [1, 9])
+
+    return x_training, x_testing, training_target_sin, testing_target_sin, square_training_target, square_testing_target, W, V
+
 
 
 def split_X(X, ratio):
@@ -369,16 +408,41 @@ def split_X(X, ratio):
     Ratio3: 50B
     Ratio4: 20 <0 80 > 0 A
 """
-#auto_encode(500000,0.001)
-X, T, W, V = gauss_func()
-two_layer_train(X,T,W,V,1000,0.001)
-#train_x,train_w,train_t = split_data(X,T,0.2)
-#trained_w,trained_v, err_list,it_list = two_layer_train(train_x,train_t,train_w,V,10000,0.001)
-#_,_,new_err_list,new_it_list = two_layer_train(X,T,trained_w,trained_v,10000,0.001)
-#pad.plot_diff(err_list,new_err_list)
-#two_layer_train(X, T, W, V, 10000, 0.001)
-#X, W, V, T = generate_matrices()
-#plot_all_two_layer(X, W, learning_rate)
-#new_X, validation_X, new_T, validation_T = split_X(X, 1)
-#W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 1000, learning_rate)
-#plot_all_two_layer(X, W, learning_rate)
+
+
+def plot_approximation(estimate, target):
+    """
+    Func plot_approximation/2
+    @spec plot_approximation(list, list) :: void
+        Plot the function approximation estimate over the target function.
+    """
+    print(estimate)
+    plt.plot(estimate, label="Estimate", color="red")
+    plt.plot(target, label="Target", color="blue")
+    plt.title("Estimate vs target")
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+
+x_training, x_testing, training_target_sin, testing_target_sin, square_training_target, square_testing_target, W, V = generate_input()
+print(W)
+print(V)
+print(x_training)
+print(square_training_target)
+W, V, err_list, it_list, estimation = two_layer_train(x_training, square_training_target, W, V)
+print(err_list)
+plot_approximation(estimation[0], square_training_target)
+# auto_encode(500000,0.001)
+# X, T, W, V = gauss_func()
+# two_layer_train(X, T, W, V, 1000, 0.001)
+# train_x,train_w,train_t = split_data(X,T,0.2)
+# trained_w,trained_v, err_list,it_list = two_layer_train(train_x,train_t,train_w,V,10000,0.001)
+# _,_,new_err_list,new_it_list = two_layer_train(X,T,trained_w,trained_v,10000,0.001)
+# pad.plot_diff(err_list,new_err_list)
+# two_layer_train(X, T, W, V, 10000, 0.001)
+# X, W, V, T = generate_matrices()
+# plot_all_two_layer(X, W, learning_rate)
+# new_X, validation_X, new_T, validation_T = split_X(X, 1)
+# W, V, err_list, acc_list, it_list = two_layer_train(X, T, W, V, 1000, learning_rate)
+# plot_all_two_layer(X, W, learning_rate)
