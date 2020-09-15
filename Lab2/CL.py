@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 # Global variables don't touch please
 N = 63  # Number of inputs
-n = 20 # Number of RBF's, has to be greater than N
+n = 40 # Number of RBF's, has to be greater than N
 step_size = 0.1  # Used for generating sin wave
 sigma = 1  # Variance for all nodes
 
 
-def generate_input(use_noise=False):
+def generate_input(use_noise=True):
     """
     Func generate_input/0
     @spec generate_input() :: np.array(), np.array(), np.array(), np.array(), np.array(), np.array()
@@ -53,16 +53,23 @@ def generate_big_phi(input_matrix, rbf_pos):
 def generate_weight():
     return np.random.uniform(0, 2*np.pi, n)
 
+def place_rbf_hand_job():
+    return np.array([0, np.pi/4, np.pi/2, 3*np.pi/4, np.pi, 5*np.pi/4, 3*np.pi/2, 7*np.pi/4])
 
-def delta_rule(square):
+def delta_rule(square,competetive):
     train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
     w =  generate_weight()
-    rbf_pos = competetive_rbf(train_x,n,0.1,20000)
+    if competetive:
+        rbf_pos = competetive_rbf(train_x,n,0.01,1000,5)
+        #print(rbf_pos)
+    else:
+        rbf_pos = place_rbf_hand_job()
     phi_test = generate_big_phi(test_x, rbf_pos)
     phi_train = generate_big_phi(train_x, rbf_pos)
     epochs = 1000
     train_size = len(train_x)
     error = 0
+    error_list = []
     estimation = []
     for i in range(epochs):
         # print(f" Epoch number: [{i}]")
@@ -80,9 +87,12 @@ def delta_rule(square):
                 # k = (k + 1) % train_size
                 delta_w = delta_learning_rule(e, phi_test, k, 0.001)
                 w += delta_w
-    if not square:
         estimation = phi_test @ w
-        error = np.abs(estimation-sin_test_t).mean()
+        error = np.abs(estimation - sin_test_t).mean()
+        error_list.append(error)
+    if not square:
+        pass
+        #error = np.abs(estimation-sin_test_t).mean()
     else:
         estimation = phi_test @ w
         for i in range(len(estimation)):
@@ -90,8 +100,8 @@ def delta_rule(square):
                 estimation[i] = 1
             else:
                 estimation[i] = -1
-        error = np.abs(estimation-square_test_t).mean()
-    return error, sin_test_t, estimation
+
+    return error_list, sin_test_t, estimation
 
 def generate_initial_rbf_position():
     """
@@ -104,15 +114,36 @@ def generate_initial_rbf_position():
     rbf_pos = np.random.uniform(0, 2*np.pi, n)
     return rbf_pos
 
-def competetive_rbf(x_training,nodes,eta,epochs):
+def competetive_rbf(x_training,nodes,eta,epochs,winners):
+    #
     RBF = x_training[:n]
     for i in range(epochs):
         random_data_point = x_training[np.random.randint(0,len(x_training))-1]
         dist = np.zeros(nodes)
         for i in range(len(RBF)):
             dist[i] = np.linalg.norm(RBF[i]-random_data_point)
-        RBF[np.argmin(dist)] += eta* (random_data_point-RBF[np.argmin(dist)])
+        for i in range(winners):
+           # print(dist)
+            RBF[np.argmin(dist)] += eta * (random_data_point-RBF[np.argmin(dist)])
+            dist[np.argmin(dist)] = np.inf
     return RBF
+
+
+def plot_error(err, it):
+    """
+    Func plot_error/2
+    @spec plot_error(list, list) :: void
+        Plots the calculated errors over the corresponding iteration in learning process.
+        Used to visualize the convergence of the error function E.
+    """
+    plt.ylim(top=-0.1, bottom=1)
+    # plt.plot(x, y, ...)
+    plt.plot(it, err, color="green")
+    plt.xlabel("Number of units")
+    plt.ylabel("Error")
+    plt.title("Error ratio over number units")
+    plt.grid()
+    plt.show()
 
 def plot_approximation(estimate, target):
     """
@@ -136,8 +167,8 @@ def main():
 
 
 
-    error,target,est = delta_rule(False)
-    #print(error)
+    error,target,est = delta_rule(False,True)
+    plot_error(error,[x for x in range(len(error))])
     plot_approximation(est, target)
     error_list = []
     """for i in range(50):
