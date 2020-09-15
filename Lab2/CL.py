@@ -12,15 +12,22 @@ def read_data():
     with open(ball_training_data) as f:
         for line in f:
             ballist_data.append([float(n) for n in line.strip().split()])
-    x_training = np.zeros(2,len(ballist_data))
-    x_training
-    for pair in ballist_data:
-        try:
-            print(pair)
-            x_training[0,len(ballist_data):] = pair[0]
-            y_training = pair[1]
-        except IndexError:
-            print("A line in the file doesn't have enough entries.")
+    
+    x_training = np.zeros(2, len(ballist_data))
+    x_training[0] = ballist_data[:, 0]
+    x_training[1] = ballist_data[:, 1]
+
+    training_target = np.zeros(2, len(ballist_data))
+    training_target[0] = ballist_data[:, 2]
+    training_target[1] = ballist_data[:, 3]
+
+    #for pair in ballist_data:
+    #    try:
+    #        print(pair)
+    #        x_training[0,len(ballist_data):] = pair[0]
+    #       y_training = pair[1]
+    #    except IndexError:
+    #        print("A line in the file doesn't have enough entries.")
 
 
     all_data = ball_training_data.split
