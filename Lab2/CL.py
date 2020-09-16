@@ -67,13 +67,12 @@ def phi_func(x, my):
     return np.exp(-np.linalg.norm((x - my))**2 / (2*(sigma ** 2)))
 
 
-
-
 def calculate_error(target,estimate):
     return 1/2*((target-estimate)**2)
 
 
 def delta_learning_rule(error, phi, k, eta):
+    #(phi[k])
     return eta*error*phi[k]
 
 def generate_big_phi(input_matrix, rbf_pos):
@@ -96,9 +95,9 @@ def delta_rule(square,competetive,ball):
         train_x, test_x, train_y, test_y = read_data()
         #print(train_x)
 
-    rbf_pos = place_rbf_hand_job()
+    w = np.random.uniform(0,2*np.pi,(n,2))
     if competetive:
-        w = competetive_rbf(train_x,n,0.01,1000,1)
+        rbf_pos = competetive_rbf(train_x,n,0.01,1000,1)
         #print(rbf_pos)
     else:
         w = generate_weight()
@@ -119,8 +118,6 @@ def delta_rule(square,competetive,ball):
                 else:
                     e = sin_train_t[k] - phi_train[k]@w
                 # k = (k+1) % train_size
-
-                delta_w = delta_learning_rule(e, phi_test, k, 0.01)
                 w += delta_w
         else:
             for k in range(train_size):
@@ -131,10 +128,10 @@ def delta_rule(square,competetive,ball):
                 w += delta_w
         estimation = phi_test @ w
         if ball:
-            error = np.abs(estimation - test_y).mean()
+            error = np.abs(np.linalg.norm(estimation - test_y)).mean()
         else:
             error = np.abs(estimation - sin_test_t).mean()
-        error_list.append(error)
+       # error_list.append(error)
     if not square:
         pass
         #error = np.abs(estimation-sin_test_t).mean()
@@ -146,7 +143,55 @@ def delta_rule(square,competetive,ball):
             else:
                 estimation[i] = -1
 
-    return error_list, sin_test_t, estimation
+    return error_list, test_y, estimation
+
+
+
+
+
+def least_squares(phi, target):
+    """
+    Func least_squares/2
+    @spec least_squares(np.array(), np.array()) :: np.array()
+        Calculates the weight matrix w by solving the given systems of linear equations.
+    """
+    return np.linalg.solve(phi.T @ phi, phi.T @ target)
+
+def calc_total_error(estimation, target):
+    """
+    The function error becomes:
+            total error = ||PHI*w - f||^2
+    """
+    return np.abs(np.subtract(estimation, target)).mean()
+
+
+def perform_least_squared():
+    """
+    Func perform_least_squared/0
+        Change code to work for 'box'-function instead of sinus.
+    """
+    print("### --- Doing the least squared --- ###")
+    train_x, test_x, train_y, test_y = read_data()
+    err_list = []
+    iteration_list = []
+    iteration = 0
+    estimation = []
+    global n
+
+    rbf_pos = competetive_rbf(train_x,n,0.01,1000,1)
+    phi_train = generate_big_phi(train_x, rbf_pos)
+    w = least_squares(phi_train,train_y)
+    test_phi = generate_big_phi(test_x, rbf_pos)
+    estimation = test_phi @ w
+    print(estimation.shape)
+    err_list.append(calc_total_error(estimation, test_y))
+    #print(err_list[iteration])
+    iteration_list.append(iteration + n)
+    iteration += 1
+    plt.scatter(estimation[:,0],estimation[:,1])
+    plt.scatter(test_y[:,0],test_y[:,1])
+    plt.show()
+    return err_list
 
 def generate_initial_rbf_position():
     """
@@ -212,10 +257,11 @@ def main():
     #rbf_pos = competetive_rbf(train_x,n,0.01,1000)
 
 
-
-    error,target,est = delta_rule(False,True,True)
-    print(np.mean(error))
-    plot_error(error,[x for x in range(len(error))])
+    err_list = perform_least_squared()
+    print(err_list)
+    #error,target,est = delta_rule(False,True,True)
+    #estimation, test_y,train_y,err_list, iteration_list = print(np.mean(error))
+    #plot_error(error,[x for x in range(len(error))])
     #plot_approximation(est, target)
     error_list = []
     """for i in range(50):
