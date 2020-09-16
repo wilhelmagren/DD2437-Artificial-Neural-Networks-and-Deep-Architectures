@@ -1,37 +1,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
 # Global variables don't touch please
-N = 63  # Number of inputs
+N = 100  # Number of inputs
 n = 16 # Number of RBF's, has to be greater than N
 step_size = 0.1  # Used for generating sin wave
 sigma = 1  # Variance for all nodes
 
 def read_data():
-    ball_training_data = "C:\\Users\\erjab\\PycharmProjects\\pythonProject\\dd2437-ann-new\\dd2437-ann\\Lab2\\ballist.dat"
-    ballist_data = []
-    with open(ball_training_data) as f:
-        for line in f:
-            ballist_data.append([float(n) for n in line.strip().split()])
-    
-    x_training = np.zeros(2, len(ballist_data))
-    x_training[0] = ballist_data[:, 0]
-    x_training[1] = ballist_data[:, 1]
+    f_train = "C:\\Users\\erjab\\PycharmProjects\\pythonProject\\dd2437-ann-new\\dd2437-ann\\Lab2\\datasets\\ballist.dat"
+    f_train = open(f_train,"r")
+    #ballist_data = []
+    list = []
+    temp = []
+    for i, line in enumerate(f_train.read().split()):
+        if i % 4 == 0 and i != 0:
+            list.append(temp)
+            temp = []
+        temp.append(line)
+    list.append(temp)
+    training = np.asfarray(np.array(list), float)
+    x_train, y_train = np.hsplit(training,2)
 
-    training_target = np.zeros(2, len(ballist_data))
-    training_target[0] = ballist_data[:, 2]
-    training_target[1] = ballist_data[:, 3]
-
-    #for pair in ballist_data:
-    #    try:
-    #        print(pair)
-    #        x_training[0,len(ballist_data):] = pair[0]
-    #       y_training = pair[1]
-    #    except IndexError:
-    #        print("A line in the file doesn't have enough entries.")
-
-
-    all_data = ball_training_data.split
-    print(all_data)
+    f_test = "C:\\Users\\erjab\\PycharmProjects\\pythonProject\\dd2437-ann-new\\dd2437-ann\\Lab2\\datasets\\balltest.dat"
+    f_test = open(f_test,"r")
+    # ballist_data = []
+    list = []
+    temp = []
+    for i, line in enumerate(f_test.read().split()):
+        if i % 4 == 0 and i != 0:
+            list.append(temp)
+            temp = []
+        temp.append(line)
+    list.append(temp)
+    training = np.asfarray(np.array(list), float)
+    x_test,y_test = np.hsplit(training, 2)
+    return x_train,x_test,y_train,y_test
     #ball_test_data = open("balltest.dat","r")
 
 def generate_input(use_noise=True):
@@ -60,7 +63,10 @@ def generate_input(use_noise=True):
 
 
 def phi_func(x, my):
-    return np.exp(-(x - my)**2 / (2*(sigma ** 2)))
+
+    return np.exp(-np.linalg.norm((x - my))**2 / (2*(sigma ** 2)))
+
+
 
 
 def calculate_error(target,estimate):
@@ -83,8 +89,13 @@ def generate_weight():
 def place_rbf_hand_job():
     return np.array([x*np.pi/8 for x in range(n)])
 
-def delta_rule(square,competetive):
-    train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
+def delta_rule(square,competetive,ball):
+    if not ball:
+        train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
+    else:
+        train_x, test_x, train_y, test_y = read_data()
+        #print(train_x)
+
     rbf_pos = place_rbf_hand_job()
     if competetive:
         w = competetive_rbf(train_x,n,0.01,1000,1)
@@ -103,8 +114,12 @@ def delta_rule(square,competetive):
         if not square:
             for k in range(train_size):
                 # print(f" k number: [{k}]")
-                e = sin_train_t[k] - phi_train[k]@w
+                if ball:
+                    e = np.linalg.norm(train_y[k] - phi_train[k]@w)
+                else:
+                    e = sin_train_t[k] - phi_train[k]@w
                 # k = (k+1) % train_size
+
                 delta_w = delta_learning_rule(e, phi_test, k, 0.01)
                 w += delta_w
         else:
@@ -115,7 +130,10 @@ def delta_rule(square,competetive):
                 delta_w = delta_learning_rule(e, phi_test, k, 0.001)
                 w += delta_w
         estimation = phi_test @ w
-        error = np.abs(estimation - sin_test_t).mean()
+        if ball:
+            error = np.abs(estimation - test_y).mean()
+        else:
+            error = np.abs(estimation - sin_test_t).mean()
         error_list.append(error)
     if not square:
         pass
@@ -145,7 +163,7 @@ def competetive_rbf(x_training,nodes,eta,epochs,winners):
     #
     W = x_training[:n]
     for i in range(epochs):
-        random_data_point = x_training[np.random.randint(0,len(x_training))-1]
+        random_data_point = np.array(x_training[np.random.randint(0,len(x_training))-1])
         dist = np.zeros(nodes)
         for i in range(len(W)):
             dist[i] = np.linalg.norm(W[i]-random_data_point)
@@ -188,16 +206,16 @@ def plot_approximation(estimate, target):
 
 
 def main():
-    read_data()
+
     global n
     #train_x, test_x, sin_train_t, sin_test_t, square_train_t, square_test_t = generate_input()
     #rbf_pos = competetive_rbf(train_x,n,0.01,1000)
 
 
 
-    #error,target,est = delta_rule(False,True)
-    #print(np.mean(error))
-    #plot_error(error,[x for x in range(len(error))])
+    error,target,est = delta_rule(False,True,True)
+    print(np.mean(error))
+    plot_error(error,[x for x in range(len(error))])
     #plot_approximation(est, target)
     error_list = []
     """for i in range(50):
