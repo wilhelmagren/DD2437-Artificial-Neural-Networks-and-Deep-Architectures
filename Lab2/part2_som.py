@@ -79,5 +79,7 @@ def main():
         values[i] = (index[i], animal_names[i])
     array = np.array(values, dtype=dtype)
     print(np.sort(array, order='index'))
+
+
 if __name__ == "__main__":
     main()
