@@ -38,7 +38,7 @@ def find_closest(animal, W, epoch, grannar=True, eta=0.2):
     if not grannar:
         return np.argmin(dist)
 
-    num_neighbour = 50 - epoch*3
+    num_neighbour = 50 - epoch*4
     if num_neighbour < 0:
         num_neighbour = 1
     for index in range(num_neighbour):
@@ -63,15 +63,21 @@ def save_the_animals(input, epoch=50):
         argmin = find_closest(animal, w, e, False)
         pos.append(argmin)
     # Sort the vec pos and we get the animals in correct order. EASY?
-    np.sort(pos)
-    print(pos)
+
+    return pos
 
 
 def main():
     print("### -- In main part2_som.py -- ###")
     animal = read_data_animals(".\\datasets\\animals.dat")
     animal_names = read_data_animals_name(".\\datasets\\animalnames.txt")
-    save_the_animals(animal)
+    index = save_the_animals(animal)
+    dtype = [('index', int), ('animal', 'S10')]
+    values = [0 for i in range(species)]
 
+    for i in range(species):
+        values[i] = (index[i], animal_names[i])
+    array = np.array(values, dtype=dtype)
+    print(np.sort(array, order='index'))
 if __name__ == "__main__":
     main()
