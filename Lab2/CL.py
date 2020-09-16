@@ -177,13 +177,11 @@ def perform_least_squared():
     iteration = 0
     estimation = []
     global n
-
     rbf_pos = competetive_rbf(train_x,n,0.01,1000,1)
     phi_train = generate_big_phi(train_x, rbf_pos)
     w = least_squares(phi_train,train_y)
     test_phi = generate_big_phi(test_x, rbf_pos)
     estimation = test_phi @ w
-    print(estimation.shape)
     err_list.append(calc_total_error(estimation, test_y))
     #print(err_list[iteration])
     iteration_list.append(iteration + n)
