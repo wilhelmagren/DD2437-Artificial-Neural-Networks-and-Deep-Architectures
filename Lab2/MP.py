@@ -2,10 +2,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import euclidean
+import re
 
 members = 349
 votes = 31
-n = 10
+n = 100
+
+
 def read_data_votes(voting):
     f = open(voting,"r")
     animals = np.zeros((members,votes))
@@ -16,6 +19,16 @@ def read_data_votes(voting):
     f.close()
     return animals
 
+
+def read_party(path):
+    f = open(path, "r")
+    parties = f.read()
+    parties = re.sub(r'\t', '', parties)
+    parties = re.sub(r' ', '', parties)
+    parties = list(map(int, parties.splitlines()))
+    return np.asarray(parties)
+
+
 def find_closest(animal, W, num_neighbour, grannar=True, eta=0.2):
     """
     Func find_closest/5
@@ -25,18 +38,28 @@ def find_closest(animal, W, num_neighbour, grannar=True, eta=0.2):
     """
     dist = np.zeros(n)
     for i, w in enumerate(W):
-        dist[i] = np.linalg.norm(animal - w)
+        dist[i] = np.linalg.norm(animal-w)
 
     if not grannar:
         return np.argmin(dist)
 
-    if num_neighbour < 0:
-        num_neighbour = 1
     for index in range(num_neighbour):
-        if 0 < np.argmin(dist) + index < votes:
+        tmp_index = 0
+        if np.argmin(dist) + index > len(W) - 1:
+            tmp_index = np.argmin(dist) + index - len(W)
+            W[tmp_index] += eta * (animal - W[tmp_index])
+            if np.argmin(dist) - index < 0:
+                tmp_index = np.argmin(dist) - index + len(W) - 1
+                W[tmp_index] += eta * (animal - W[tmp_index])
+            else:
+                W[np.argmin(dist) - index] += eta * (animal - W[np.argmin(dist) - index])
+        else:
             W[np.argmin(dist) + index] += eta * (animal - W[np.argmin(dist) + index])
-        if 0 < np.argmin(dist) - index < votes:
-            W[np.argmin(dist) - index] += eta * (animal - W[np.argmin(dist) - index])
+            if np.argmin(dist) - index < 0:
+                tmp_index = np.argmin(dist) - index + len(W) - 1
+                W[tmp_index] += eta * (animal - W[tmp_index])
+            else:
+                W[np.argmin(dist) - index] += eta * (animal - W[np.argmin(dist) - index])
     return W
 
 
@@ -70,18 +93,48 @@ def save_the_animals(input, epoch=20):
         pos[i] = np.argmin(distance)
     # Now we have the route
     ordered = np.argsort(pos)
-    # Add the starting position as last position in the route - since we are doing a cycle
-    ordered = np.append(ordered, ordered[0])
-    print(f"The ordered route looks like this:\n    |-> {ordered}")
-    plt.title("Cyclic route")
-    plt.scatter(input[ordered][:, 0], input[ordered][:, 1])
-    plt.plot(input[ordered][:, 0], input[ordered][:, 1])
+    ordered = np.concatenate((ordered, ordered))
+    return ordered
+
+
+def map_pos_to_attributes(res, parties):
+    """
+        % Coding: 0=no party, 1='m', 2='fp', 3='s', 4='v', 5='mp', 6='kd', 7='c'
+        % Use some color scheme for these different groups
+    """
+    num_col_part = {
+        0: "grey",
+        1: "blue",
+        2: "yellow",
+        3: "red",
+        4: "orange",
+        5: "green",
+        6: "magenta",
+        7: "cyan"
+    }
+    num_col_sex = {
+        0: "red",
+        1: "blue",
+    }
+
+    # pos_party = np.concatenate((res, parties))
+    for v in range(len(res)):
+        col = num_col_part[int(parties[v])]
+        plt.scatter(res[v], parties[v], color=col)
+    plt.xlim(0, 10)
+    plt.ylim(0, 10)
+    plt.xlabel("left - right")
+    plt.ylabel("lib - authoritarian")
+    plt.title("Party votes")
     plt.show()
+
 
 def main():
     print("### -- In main cyclic.py -- ###")
     votes_input = read_data_votes(".\\datasets\\votes.dat")
-    save_the_animals(votes_input)
+    parties = read_party(".\\datasets\\mpparty.dat")
+    res = save_the_animals(votes_input)
+    map_pos_to_attributes(res, parties)
 
 
 if __name__ == "__main__":
