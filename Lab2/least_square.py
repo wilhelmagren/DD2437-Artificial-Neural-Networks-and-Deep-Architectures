@@ -218,7 +218,7 @@ def plot_error(err, it):
     plt.show()
 
 
-def perform_least_squared(squared=True):
+def perform_least_squared(squared=False):
     """
     Func perform_least_squared/0
         Change code to work for 'box'-function instead of sinus.
@@ -257,7 +257,7 @@ def perform_least_squared(squared=True):
             #print(err_list[iteration])
             iteration_list.append(iteration)
             iteration += 1
-    return estimation, square_test_t, err_list, iteration_list
+    return estimation, sin_test_t, err_list, iteration_list
 
 
 def plot_rbf_pos(rbf):
@@ -280,8 +280,9 @@ def place_rbf_hand_job():
 
 def main():
     global n
-    ls_estimation, ls_square_test_t, ls_err_list, ls_iteration_list = perform_least_squared()
-    plot_approximation(ls_estimation, ls_square_test_t)
+    #ls_estimation, ls_square_test_t, ls_err_list, ls_iteration_list = perform_least_squared()
+    err, sin_t, est = delta_rule(False)
+    plot_approximation(est, sin_t)
     # error_list = []
     # for i in range(50):
     #    print(f"n is: [{n}] and sigmaballs is: [{sigma}]")
