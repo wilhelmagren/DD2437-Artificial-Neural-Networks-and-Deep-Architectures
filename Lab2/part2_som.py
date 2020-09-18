@@ -22,7 +22,7 @@ def read_data_animals_name(animals_name):
     f = open(animals_name, "r")
     animals_name = []
     for line in f:
-        animals_name.append(line.split("\t\n")[0])
+        animals_name.append(line.split("\n")[0].split("\t")[0])
     f.close()
     return animals_name
 
@@ -72,7 +72,7 @@ def main():
     animal = read_data_animals(".\\datasets\\animals.dat")
     animal_names = read_data_animals_name(".\\datasets\\animalnames.txt")
     index = save_the_animals(animal)
-    dtype = [('index', int), ('animal', 'S10')]
+    dtype = [('index', int), ('animal', np.unicode_, 16)]
     values = [0 for i in range(species)]
 
     for i in range(species):
