@@ -40,18 +40,31 @@ def calculate_weight_matrix(w, pattern_list, scale=False):
 
 
 def generate_weight_matrix():
+    """
+    @spec generate_weight_matrix() :: np.array()
+        Return a normally distributed NxN weight matrix.
+        TODO: Look at other ways to initialize the weight matrix. Also maybe we should use bias?
+    """
     w = np.random.normal(0, 1, (N, N))
     return w
 
 
 def generate_input_patterns():
+    # x1, x2, x3 are the initial patterns which we will train the network on.
+    # x1 should be 1 bit different from x1d
+    x1 = np.array([1, -1, 1, -1, 1, -1, -1, -1])
+    # x2 should be 2-bit different from x2d
+    x2 = np.array([1, -1, -1, -1, 1, 1, -1, -1])
+    # x3 should also be 2-bit different from x3d
+    x3 = np.array([1, -1, 1, -1, 1, 1, 1, 1])
+
     # Since this is distorted with a 1-bit error - maybe the pattern should be: [1, -1, 1, -1, 1, -1, 1, -1] ?
     x1d = np.array([1, -1, 1, -1, 1, -1, -1, 1])
     # 2-bit error
     x2d = np.array([1, 1, -1, -1, -1, 1, -1, -1])
     # 2-bit error
     x3d = np.array([1, 1, 1, -1, 1, 1, -1, 1])
-    return np.vstack([x1d, x2d, x3d])
+    return np.vstack([x1, x2, x3]), np.vstack([x1d, x2d, x3d])
 
 
 def main():
@@ -81,10 +94,10 @@ def main():
             approximating complex functions.
         - Fixed points are points that when applying the update rule -> you get the same points back.
     """
-    pattern_l = generate_input_patterns()
-    w = calculate_weight_matrix(generate_weight_matrix(), pattern_l)
-    recalled_pattern = hopfield_recall(w, pattern_l[1])
-    print(recalled_pattern)
+    pure_patterns, dist_patterns = generate_input_patterns()
+    w = calculate_weight_matrix(generate_weight_matrix(), pure_patterns)
+    # recalled_pattern = hopfield_recall(w, pattern_l[1])
+    # print(recalled_pattern)
     # If below is true - then the network as been trained to recall a 1-bit error pattern. That's great! :)
     # recalled_pattern == pattern_l[0]
 
