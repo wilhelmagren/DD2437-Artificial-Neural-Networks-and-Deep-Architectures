@@ -50,6 +50,11 @@ def generate_weight_matrix():
 
 
 def generate_input_patterns():
+    """
+    @spec generate_input_patterns() :: np.array(), np.array()
+        Create the pure training patterns and the distorted testing patterns.
+        Return them as PxN np.array() with pure matrix being returned as first matrix.
+    """
     # x1, x2, x3 are the initial patterns which we will train the network on.
     # x1 should be 1 bit different from x1d
     x1 = np.array([1, -1, 1, -1, 1, -1, -1, -1])
