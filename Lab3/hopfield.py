@@ -31,13 +31,14 @@ def test_hopfield(w, dist_p):
     """
     # Iteratively call hopfield_recall/2 here to see convergence until recalled same pure pattern.
     for p in dist_p:
+        tmp_p = p
         recalled_pattern = hopfield_recall(w, p)
         while not np.array_equal(recalled_pattern, p):
             # print(f"The pattern {p} did not reach fixed point within {count} iterations.\n    |-> The last recalled"
             #      f" pattern looks like {recalled_pattern}")
             p = recalled_pattern
             recalled_pattern = hopfield_recall(w, p)
-        print(f"The pattern vector {p} and recalled fixed point {recalled_pattern}")
+        print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
     return
 
 
