@@ -162,6 +162,7 @@ def two_layer_train(X, T, W, V, epoch=50000, eta=0.01):
         delta_W, delta_V = get_delta_weights(delta_h, delta_o, X, eta, h_out)
         V, W = update_weights(V,W,delta_W,delta_V)
         new_error = calculate_error(X, W, T)
+        print(new_error)
         error_list.append(new_error)
         #acc_list.append(calc_accuracy(X, W, V, T))
         iterations.append(i)
@@ -262,9 +263,9 @@ def calc_accuracy(X, W, V, T, non_separable = True):
 
 def plot_accuracy(accuracy_list, iteration_list):
     plt.plot(iteration_list, accuracy_list, color="green")
-    plt.xlabel("Number of iterations")
-    plt.ylabel("Accuracy rate")
-    plt.title(f"2-layer perceptron: {hidden_neurons} hidden neurons")
+    plt.xlabel("Number of epochs")
+    plt.ylabel("Error rate")
+    plt.title(f"2-layer perceptron: {hidden_neurons} hidden neurons, eta = {learning_rate}")
     plt.show()
 
 
@@ -426,13 +427,9 @@ def plot_approximation(estimate, target):
 
 
 x_training, x_testing, training_target_sin, testing_target_sin, square_training_target, square_testing_target, W, V = generate_input()
-print(W)
-print(V)
-print(x_training)
-print(square_training_target)
-W, V, err_list, it_list, estimation = two_layer_train(x_training, square_training_target, W, V)
-print(err_list)
-plot_approximation(estimation[0], square_training_target)
+W, V, err_list, it_list, estimation = two_layer_train(x_training, training_target_sin, W, V)
+plot_approximation(estimation[0], testing_target_sin)
+plot_accuracy(err_list, it_list)
 # auto_encode(500000,0.001)
 # X, T, W, V = gauss_func()
 # two_layer_train(X, T, W, V, 1000, 0.001)

@@ -104,6 +104,7 @@ def delta_rule(square):
     epochs = 100
     train_size = len(train_x)
     error = 0
+    err_list = []
     estimation = []
     for i in range(epochs):
         # print(f" Epoch number: [{i}]")
@@ -112,8 +113,10 @@ def delta_rule(square):
                 # print(f" k number: [{k}]")
                 e = sin_train_t[k] - phi_train[k]@w
                 # k = (k+1) % train_size
-                delta_w = delta_learning_rule(e, phi_test, k, 0.1)
+                delta_w = delta_learning_rule(e, phi_test, k, 0.01)
                 w += delta_w
+                estimation = phi_test @ w
+                err_list.append(np.abs(estimation-sin_test_t).mean())
         else:
             for k in range(train_size):
                 # print(f" k number: [{k}]")
@@ -132,7 +135,7 @@ def delta_rule(square):
             else:
                 estimation[i] = -1
         error = np.abs(estimation-square_test_t).mean()
-    return error, sin_test_t, estimation
+    return err_list, sin_test_t, estimation
 
 
 def generate_big_phi(input_matrix, rbf_pos):
@@ -211,9 +214,9 @@ def plot_error(err, it):
     plt.ylim(top=-0.1, bottom=1)
     # plt.plot(x, y, ...)
     plt.plot(it, err, color="green")
-    plt.xlabel("Number of units")
+    plt.xlabel("Number of epochs")
     plt.ylabel("Error")
-    plt.title("Error ratio over number units")
+    plt.title("Error ratio over num epochs")
     plt.grid()
     plt.show()
 
@@ -283,6 +286,7 @@ def main():
     #ls_estimation, ls_square_test_t, ls_err_list, ls_iteration_list = perform_least_squared()
     err, sin_t, est = delta_rule(False)
     plot_approximation(est, sin_t)
+    #plot_approximation(est, sin_t)
     # error_list = []
     # for i in range(50):
     #    print(f"n is: [{n}] and sigmaballs is: [{sigma}]")
