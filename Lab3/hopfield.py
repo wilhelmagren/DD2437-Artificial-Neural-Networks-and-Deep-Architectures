@@ -23,6 +23,24 @@ def hopfield_recall(w, patterns):
     return res
 
 
+def test_hopfield(w, dist_p):
+    """
+    @spec test_hopfield(np.array(), np.array()) :: void
+        Iteratively try and recall the original pattern given a distorted pattern.
+        This recalled pattern is called a 'Fixed point' if we apply the update_rule and get the same pattern back.
+    """
+    # Iteratively call hopfield_recall/2 here to see convergence until recalled same pure pattern.
+    for p in dist_p:
+        recalled_pattern = hopfield_recall(w, p)
+        while not np.array_equal(recalled_pattern, p):
+            # print(f"The pattern {p} did not reach fixed point within {count} iterations.\n    |-> The last recalled"
+            #      f" pattern looks like {recalled_pattern}")
+            p = recalled_pattern
+            recalled_pattern = hopfield_recall(w, p)
+        print(f"The pattern vector {p} and recalled fixed point {recalled_pattern}")
+    return
+
+
 def calculate_weight_matrix(w, pattern_list, scale=False):
     """
     @spec calculate_weight_matrix(np.array(), np.array()) :: np.array()
@@ -57,11 +75,11 @@ def generate_input_patterns():
     """
     # x1, x2, x3 are the initial patterns which we will train the network on.
     # x1 should be 1 bit different from x1d
-    x1 = np.array([1, -1, 1, -1, 1, -1, -1, -1])
+    x1 = np.array([1, -1, 1, -1, 1, -1, 1, 1])
     # x2 should be 2-bit different from x2d
-    x2 = np.array([1, -1, -1, -1, 1, 1, -1, -1])
+    x2 = np.array([1, 1, -1, -1, 1, 1, -1, -1])
     # x3 should also be 2-bit different from x3d
-    x3 = np.array([1, -1, 1, -1, 1, 1, 1, 1])
+    x3 = np.array([1, -1, 1, -1, 1, 1, -1, -1])
 
     # Since this is distorted with a 1-bit error - maybe the pattern should be: [1, -1, 1, -1, 1, -1, 1, -1] ?
     x1d = np.array([1, -1, 1, -1, 1, -1, -1, 1])
@@ -98,9 +116,16 @@ def main():
         - When calculating W, we only need to scale with 1/N if using bias, calculating energy or
             approximating complex functions.
         - Fixed points are points that when applying the update rule -> you get the same points back.
+
+    Maybe look at this for some theory: https://www.youtube.com/watch?v=nv6oFDp6rNQ
     """
     pure_patterns, dist_patterns = generate_input_patterns()
     w = calculate_weight_matrix(generate_weight_matrix(), pure_patterns)
+
+    # W is now set up from the pure training patterns. We will now see how well the network can recall the
+    #       training patterns based on distorted versions of them. Remember to look at convergence rate!
+    test_hopfield(w, dist_patterns)
+
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
     # If below is true - then the network as been trained to recall a 1-bit error pattern. That's great! :)
