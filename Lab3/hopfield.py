@@ -83,9 +83,10 @@ def main():
     """
     pattern_l = generate_input_patterns()
     w = calculate_weight_matrix(generate_weight_matrix(), pattern_l)
-    recalled = hopfield_recall(w, pattern_l[0])
+    recalled_pattern = hopfield_recall(w, pattern_l[1])
+    print(recalled_pattern)
     # If below is true - then the network as been trained to recall a 1-bit error pattern. That's great! :)
-    # recalled == pattern_l[0]
+    # recalled_pattern == pattern_l[0]
 
 
 if __name__ == "__main__":
