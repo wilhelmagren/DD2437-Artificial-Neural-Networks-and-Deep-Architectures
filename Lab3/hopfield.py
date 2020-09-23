@@ -11,9 +11,28 @@ import matplotlib.pyplot as plt
 P = 11
 # N is the number of units, what the fuck does that mean. Maybe number of neurons? Haven't implemented any neurons doe..
 N = 1024
+# T_P is the number of patterns we train on
+T_P = 3
+
+
+def energy_function(w, pattern):
+    """
+    Lyapunov function YAAAAAAAAAAS QUEEN caslculate the energy from a pattern
+    """
+    # ENERGY IS HIGHER FOR ATTRACTORS
+    energy = 0
+    for i in range(N):
+        inner_sum = 0
+        for j in range(N):
+            inner_sum += w[i][j] * pattern[i] * pattern[j]
+        energy += inner_sum
+    return energy
 
 
 def read_file(path=".\\pict.dat"):
+    """
+    READ THE FILE FROM THE PATH and return an array of the data
+    """
     f = open(path, "r")
     data = f.readline()
     data = data.split(",")
@@ -27,6 +46,9 @@ def read_file(path=".\\pict.dat"):
 
 
 def generate_image(pattern):
+    """
+    GENERATE THE IMAGE FROM A PATTERN
+    """
     pattern = pattern.reshape((32, 32))
     plt.imshow(pattern, interpolation='nearest')
     plt.show()
@@ -40,6 +62,29 @@ def hopfield_recall(w, patterns):
     res = np.dot(patterns, w)
     res = np.sign(res)
     return res
+
+
+def test_sequential_hopfield(w, dist_p):
+    """
+    @spec test_sequential_hopfield(np.array(), np.array()) :: void
+        Sequentially and randomly chose pattern and try to recall it
+    """
+    for p in range(len(dist_p)):
+        rand_p = p
+        count = 0
+        for _ in range(N*5):
+            i = np.random.randint(0, N)
+            sum = 0
+            for j in range(N):
+                sum += w[i][j] * dist_p[rand_p][j]
+            if sum >= 0:
+                sum = 1
+            else:
+                sum = -1
+            dist_p[rand_p][i] = sum
+            if count % 500 == 0:
+                generate_image(dist_p[rand_p])
+            count += 1
 
 
 def test_hopfield(w, dist_p):
@@ -72,7 +117,7 @@ def calculate_weight_matrix(w, pattern_list, scale=False):
     """
     for i in range(N):
         for j in range(N):
-            for mu in range(3):
+            for mu in range(T_P):
                 w[i][j] += pattern_list[mu][i]*pattern_list[mu][j]
             if scale:
                 w[i][j] /= N
@@ -145,10 +190,12 @@ def main():
     # pure_patterns, dist_patterns = generate_input_patterns()
     mod_data = data[:3, :N]
     w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
-
+    for p in mod_data:
+        print(energy_function(w, p))
+    print(energy_function(w, data[5]))
     # W is now set up from the pure training patterns. We will now see how well the network can recall the
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
-    test_hopfield(w, [data[9], data[10]])
+    # test_sequential_hopfield(w, [data[9], data[10]])
 
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
