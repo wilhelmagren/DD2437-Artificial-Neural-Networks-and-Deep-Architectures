@@ -81,11 +81,11 @@ def test_sequential_hopfield(w, dist_p):
     @spec test_sequential_hopfield(np.array(), np.array()) :: void
         Sequentially and randomly chose pattern and try to recall it
     """
-    energy_list = [[] for i in range(len(dist_p))]
+    energy_list = []
     for p in range(len(dist_p)):
         rand_p = p
         count = 0
-        for _ in range(5*N):
+        for _ in range(N):
             i = np.random.randint(0, N)
             sum = 0
             for j in range(N):
@@ -96,10 +96,10 @@ def test_sequential_hopfield(w, dist_p):
                 sum = -1
             dist_p[rand_p][i] = sum
             #if count % 100 == 0:
-            energy_list[rand_p].append(energy_function(w, dist_p[rand_p]))
-            #    generate_image(dist_p[rand_p])
+            energy_list.append(energy_function(w, dist_p[p]))
+            #generate_image(dist_p[rand_p])
             count += 1
-    return energy_list
+        return energy_list
 
 
 def test_hopfield(w, dist_p):
@@ -123,20 +123,21 @@ def test_hopfield(w, dist_p):
     return
 
 
-def calculate_weight_matrix(w, pattern_list, scale=False):
+def calculate_weight_matrix(w, pattern_list, scale=True):
     """
     @spec calculate_weight_matrix(np.array(), np.array()) :: np.array()
         Returns a modified weight matrix, where all weights have been calculated given formula below.
         Function currently scales the weight with 1/N. Maybe not?
         TODO: implement feature to choose scaling or not.
     """
+
     for i in range(N):
         for j in range(N):
             for mu in range(T_P):
                 w[i][j] += pattern_list[mu][i]*pattern_list[mu][j]
             if scale:
                 w[i][j] /= N
-    return w
+    return 0.5 * (w + w.T)
 
 
 def generate_weight_matrix():
@@ -145,7 +146,8 @@ def generate_weight_matrix():
         Return a normally distributed NxN weight matrix.
         TODO: Look at other ways to initialize the weight matrix. Also maybe we should use bias?
     """
-    w = np.zeros((N, N))
+    w = np.random.normal(0,1,(N, N))
+
     return w
 
 
@@ -219,9 +221,11 @@ def main():
     # W is now set up from the pure training patterns. We will now see how well the network can recall the
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
     acc_l = test_sequential_hopfield(w, [data[9], data[10]])
-    it_l = [i for i in range(len(acc_l[0]))]
-    plot_acc(acc_l[0], it_l)
-    plot_acc(acc_l[1], it_l)
+    #print(acc_l)
+    #print(acc_l[1])
+    it_l = [i for i in range(len(acc_l))]
+    plot_acc(acc_l, it_l)
+    #plot_acc(acc_l, it_l)
 
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
