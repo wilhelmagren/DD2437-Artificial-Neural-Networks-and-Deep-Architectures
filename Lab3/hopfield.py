@@ -15,6 +15,17 @@ N = 1024
 T_P = 3
 
 
+def accuracy(target, pattern):
+    """
+    ☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂☂
+    """
+    c = 0
+    for i, p in enumerate(pattern):
+        if target[i] == p:
+            c += 1
+    return c/N
+
+
 def energy_function(w, pattern):
     """
     Lyapunov function YAAAAAAAAAAS QUEEN caslculate the energy from a pattern
@@ -64,11 +75,12 @@ def hopfield_recall(w, patterns):
     return res
 
 
-def test_sequential_hopfield(w, dist_p):
+def test_sequential_hopfield(w, dist_p, pure):
     """
     @spec test_sequential_hopfield(np.array(), np.array()) :: void
         Sequentially and randomly chose pattern and try to recall it
     """
+    acc_list = [[] for i in range(len(dist_p))]
     for p in range(len(dist_p)):
         rand_p = p
         count = 0
@@ -82,9 +94,14 @@ def test_sequential_hopfield(w, dist_p):
             else:
                 sum = -1
             dist_p[rand_p][i] = sum
-            if count % 500 == 0:
-                generate_image(dist_p[rand_p])
+            # if count % 500 == 0:
+            #    generate_image(dist_p[rand_p])
+            if p == 1:
+                acc_list[p].append(accuracy(pure[rand_p + 1], dist_p[rand_p]))
+            else:
+                acc_list[p].append(accuracy(pure[rand_p], dist_p[rand_p]))
             count += 1
+    return acc_list
 
 
 def test_hopfield(w, dist_p):
@@ -157,6 +174,14 @@ def generate_input_patterns():
     return np.vstack([x1, x2, x3]), np.vstack([x1d, x2d, x3d])
 
 
+def plot_acc(acc, it):
+    plt.plot(it, acc, color="green")
+    plt.grid()
+    plt.ylabel("accuracy")
+    plt.xlabel("number of iterations")
+    plt.show()
+
+
 def main():
     """
     Hebbian learning: (non-supervised)
@@ -190,12 +215,15 @@ def main():
     # pure_patterns, dist_patterns = generate_input_patterns()
     mod_data = data[:3, :N]
     w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
-    for p in mod_data:
-        print(energy_function(w, p))
-    print(energy_function(w, data[5]))
+    # for p in mod_data:
+    #    print(energy_function(w, p))
+    # print(energy_function(w, data[5]))
     # W is now set up from the pure training patterns. We will now see how well the network can recall the
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
-    # test_sequential_hopfield(w, [data[9], data[10]])
+    acc_l = test_sequential_hopfield(w, [data[9], data[10]], mod_data)
+    it_l = [i for i in range(len(acc_l[0]))]
+    plot_acc(acc_l[0], it_l)
+    plot_acc(acc_l[1], it_l)
 
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
