@@ -8,9 +8,28 @@ import matplotlib.pyplot as plt
     THE WORLD OF MEN AS WE NOW IT, WILL COME TO AN END... the age of the Orcs will begin.
 """
 # P is the number of patterns, we start with 3?
-P = 3
+P = 11
 # N is the number of units, what the fuck does that mean. Maybe number of neurons? Haven't implemented any neurons doe..
-N = 8
+N = 1024
+
+
+def read_file(path=".\\pict.dat"):
+    f = open(path, "r")
+    data = f.readline()
+    data = data.split(",")
+    parsed_data = [[] for i in range(P)]
+    for i in range(P):
+        for d in range(N):
+            parsed_data[i].append(int(data.pop(0)))
+    f.close()
+    # print(parsed_data)
+    return np.array(parsed_data)
+
+
+def generate_image(pattern):
+    pattern = pattern.reshape((32, 32))
+    plt.imshow(pattern, interpolation='nearest')
+    plt.show()
 
 
 def hopfield_recall(w, patterns):
@@ -39,6 +58,8 @@ def test_hopfield(w, dist_p):
             p = recalled_pattern
             recalled_pattern = hopfield_recall(w, p)
         print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
+        generate_image(tmp_p)
+        generate_image(recalled_pattern)
     return
 
 
@@ -51,7 +72,7 @@ def calculate_weight_matrix(w, pattern_list, scale=False):
     """
     for i in range(N):
         for j in range(N):
-            for mu in range(P):
+            for mu in range(3):
                 w[i][j] += pattern_list[mu][i]*pattern_list[mu][j]
             if scale:
                 w[i][j] /= N
@@ -64,7 +85,7 @@ def generate_weight_matrix():
         Return a normally distributed NxN weight matrix.
         TODO: Look at other ways to initialize the weight matrix. Also maybe we should use bias?
     """
-    w = np.random.normal(0, 1, (N, N))
+    w = np.zeros((N, N))
     return w
 
 
@@ -83,11 +104,11 @@ def generate_input_patterns():
     x3 = np.array([1, -1, 1, -1, 1, 1, -1, -1])
 
     # Since this is distorted with a 1-bit error - maybe the pattern should be: [1, -1, 1, -1, 1, -1, 1, -1] ?
-    x1d = np.array([1, -1, 1, -1, 1, -1, -1, 1])
+    x1d = np.array([1, -1, 1, -1, -1, 1, -1, -1])
     # 2-bit error
-    x2d = np.array([1, 1, -1, -1, -1, 1, -1, -1])
+    x2d = np.array([1, 1, -1, -1, -1, -1, 1, 1])
     # 2-bit error
-    x3d = np.array([1, 1, 1, -1, 1, 1, -1, 1])
+    x3d = np.array([1, -1, 1, -1, -1, -1, 1, 1])
     return np.vstack([x1, x2, x3]), np.vstack([x1d, x2d, x3d])
 
 
@@ -120,12 +141,14 @@ def main():
 
     Maybe look at this for some theory: https://www.youtube.com/watch?v=nv6oFDp6rNQ
     """
-    pure_patterns, dist_patterns = generate_input_patterns()
-    w = calculate_weight_matrix(generate_weight_matrix(), pure_patterns)
+    data = read_file()
+    # pure_patterns, dist_patterns = generate_input_patterns()
+    mod_data = data[:3, :N]
+    w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
 
     # W is now set up from the pure training patterns. We will now see how well the network can recall the
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
-    test_hopfield(w, dist_patterns)
+    test_hopfield(w, [data[9], data[10]])
 
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
