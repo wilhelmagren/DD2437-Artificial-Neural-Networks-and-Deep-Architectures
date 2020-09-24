@@ -102,28 +102,26 @@ def test_sequential_hopfield(w, dist_p):
         return energy_list
 
 
-def test_hopfield(w, dist_p,normal_p):
+def test_hopfield(w, dist_p, normal_p):
     """
     @spec test_hopfield(np.array(), np.array()) :: void
         Iteratively try and recall the original pattern given a distorted pattern.
         This recalled pattern is called a 'Fixed point' if we apply the update_rule and get the same pattern back.
     """
     # Iteratively call hopfield_recall/2 here to see convergence until recalled same pure pattern.
-    acc_list = [[] for i in range(3)]
-    count = 0
-    for p in dist_p:
-        tmp_p = p
+    acc_list = []
+    p = dist_p
+    recalled_pattern = hopfield_recall(w, p)
+    while not np.array_equal(p, recalled_pattern):
+        acc_list.append(accuracy(normal_p, recalled_pattern))
+        # print(f"The pattern {p} did not reach fixed point within {count} iterations.\n    |-> The last recalled"
+        #      f" pattern looks like {recalled_pattern}")
+        p = recalled_pattern
         recalled_pattern = hopfield_recall(w, p)
-        while not np.array_equal(recalled_pattern, p):
-            acc_list[count].append(accuracy(normal_p[count],recalled_pattern))
-            # print(f"The pattern {p} did not reach fixed point within {count} iterations.\n    |-> The last recalled"
-            #      f" pattern looks like {recalled_pattern}")
-            p = recalled_pattern
-            recalled_pattern = hopfield_recall(w, p)
-        count += 1
-        #print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
-        #generate_image(tmp_p)
-        #generate_image(recalled_pattern)
+    acc_list.append(accuracy(normal_p, recalled_pattern))
+    # print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
+    # generate_image(tmp_p)
+    # generate_image(recalled_pattern)
     return acc_list
 
 
@@ -150,8 +148,7 @@ def generate_weight_matrix():
         Return a normally distributed NxN weight matrix.
         TODO: Look at other ways to initialize the weight matrix. Also maybe we should use bias?
     """
-    w = np.random.normal(0,1,(N, N))
-
+    w = np.random.normal(0, 1, (N, N))
     return w
 
 
@@ -178,17 +175,21 @@ def generate_input_patterns():
     return np.vstack([x1, x2, x3]), np.vstack([x1d, x2d, x3d])
 
 
-def plot_acc(acc, it):
-    plt.plot(it, acc)
+def plot_acc(acc, it, lbl):
+    plt.plot(it, acc, label=lbl)
     plt.grid()
+    plt.legend()
     plt.ylabel("Accuracy")
-    plt.xlabel("number of iterations")
-    # plt.show()
-def flip_data(data,i):
+    plt.xlabel("% amount of noise")
+
+
+def flip_data(data, i):
     for row in range(len(data)):
         idx = np.random.choice(N, i*10, replace=False)
         data[row][idx] *= -1
     return data
+
+
 def main():
     """
     Hebbian learning: (non-supervised)
@@ -221,24 +222,48 @@ def main():
     data = read_file()
     # pure_patterns, dist_patterns = generate_input_patterns()
     mod_data = data[:3, :N]
+    generate_image(mod_data[2])
     w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
-    for i in range(99):
-        temp_data = mod_data
-        temp_data = flip_data(temp_data,i)
-        acc_list = test_hopfield(w,temp_data,mod_data)
-        #print(acc_list)
-        it_l = [i for i in range(len(acc_list[0]))]
-        it_l1 = [i for i in range(len(acc_list[1]))]
-        it_l2 = [i for i in range(len(acc_list[2]))]
-        if(i % 10 == 0):
-            plot_acc(acc_list[0], it_l)
-            plot_acc(acc_list[1],it_l1)
-            plot_acc(acc_list[2], it_l2)
-            plt.show()
-
-
+    super_acc_list = []
+    average = 0
+    for i in range(1, 101):
+        print(i)
+        temp_data = flip_data(mod_data.copy(), i)
+        acc_list = test_hopfield(w, temp_data[0], mod_data[0])
+        sum = np.sum(acc_list)/len(acc_list)
+        average += sum
+        if i % 10 == 0:
+            super_acc_list.append(average/10)
+            average = 0
+            # plot_acc(acc_list, it_l, "p1")
+    plot_acc(super_acc_list, [i*10 for i in range(len(super_acc_list))], "p1")
+    super_acc_list2 = []
+    for i in range(1, 101):
+        print(i)
+        temp_data = flip_data(mod_data.copy(), i)
+        acc_list = test_hopfield(w, temp_data[1], mod_data[1])
+        sum = np.sum(acc_list)/len(acc_list)
+        average += sum
+        if i % 10 == 0:
+            super_acc_list2.append(average/10)
+            average = 0
+            # plot_acc(acc_list, it_l, "p1")
+    plot_acc(super_acc_list2, [i * 10 for i in range(len(super_acc_list2))], "p2")
+    super_acc_list3 = []
+    for i in range(1, 101):
+        print(i)
+        temp_data = flip_data(mod_data.copy(), i)
+        acc_list = test_hopfield(w, temp_data[2], mod_data[2])
+        sum = np.sum(acc_list)/len(acc_list)
+        average += sum
+        if i % 10 == 0:
+            super_acc_list3.append(average/10)
+            average = 0
+            # plot_acc(acc_list, it_l, "p1")
+    plot_acc(super_acc_list3, [i * 10 for i in range(len(super_acc_list3))], "p3")
+    plt.show()
     # w = np.random.normal(0,1,(N,N))
-    wsym = 0.5 * (w*w.T)
+    # wsym = 0.5 * (w*w.T)
     # for p in mod_data:
     #    print(energy_function(w, p))
     # print(energy_function(w, data[5]))
