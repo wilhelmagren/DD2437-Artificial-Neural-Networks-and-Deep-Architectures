@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 
 """
     DO NOT TOUCH THESE GLOBAL VARIABLES!
@@ -213,6 +214,7 @@ def modified_test_hopfield(w, pattern_list):
 
 def recalculate_stable_points(patterns):
     w = generate_weight_matrix()
+    plot_energy_landscape(w, 1)
     num_good_list = []
     for i in range(T_P):
         print(f"Number of patterns trained: {i}")
@@ -221,6 +223,18 @@ def recalculate_stable_points(patterns):
         # nu ska vi kolla hur många patterns som är stable
         num_good_list.append(modified_test_hopfield(w, patterns[:i]))
     plot_acc(num_good_list, [i for i in range(len(num_good_list))], "stable patterns")
+
+
+def plot_energy_landscape(w, pattern):
+    x = np.linspace(-1, 1, 100)
+    y = np.linspace(-1, 1, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = w*X
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    surface = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=True)
+    fig.colorbar(surface, shrink=0.5, aspect=5)
+    plt.show()
 
 
 def main():
@@ -260,7 +274,6 @@ def main():
     # super_acc_list = []
     # average = 0
     # flipper = 10
-
     random_patterns = np.random.randint(-1,1,(T_P,N))
 
     for i in range(len(random_patterns)):
