@@ -137,7 +137,7 @@ def calculate_weight_matrix(w, pattern_list, scale=True):
                 w[i][j] += pattern_list[mu][i]*pattern_list[mu][j]
             if scale:
                 w[i][j] /= N
-    return 0.5 * (w + w.T)
+    return w
 
 
 def generate_weight_matrix():
@@ -215,17 +215,20 @@ def main():
     # pure_patterns, dist_patterns = generate_input_patterns()
     mod_data = data[:3, :N]
     w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
+    w = np.random.normal(0,1,(N,N))
+    wsym = 0.5 * (w*w.T)
     # for p in mod_data:
     #    print(energy_function(w, p))
     # print(energy_function(w, data[5]))
     # W is now set up from the pure training patterns. We will now see how well the network can recall the
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
     acc_l = test_sequential_hopfield(w, [data[9], data[10]])
+    acc_l1 = test_sequential_hopfield(wsym, [data[9], data[10]])
     #print(acc_l)
     #print(acc_l[1])
     it_l = [i for i in range(len(acc_l))]
     plot_acc(acc_l, it_l)
-    #plot_acc(acc_l, it_l)
+    plot_acc(acc_l1, it_l)
 
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
