@@ -12,7 +12,7 @@ P = 11
 # N is the number of units, what the fuck does that mean. Maybe number of neurons? Haven't implemented any neurons doe..
 N = 1024
 # T_P is the number of patterns we train on
-T_P = 3
+T_P = 100
 
 
 def accuracy(target, pattern):
@@ -76,16 +76,17 @@ def hopfield_recall(w, patterns):
     return res
 
 
-def test_sequential_hopfield(w, dist_p):
+def test_sequential_hopfield(w, dist_p,natural_p):
     """
     @spec test_sequential_hopfield(np.array(), np.array()) :: void
         Sequentially and randomly chose pattern and try to recall it
     """
+    acc_list = []
     energy_list = []
     for p in range(len(dist_p)):
         rand_p = p
         count = 0
-        for _ in range(N):
+        for _ in range(N*3):
             i = np.random.randint(0, N)
             sum = 0
             for j in range(N):
@@ -97,9 +98,10 @@ def test_sequential_hopfield(w, dist_p):
             dist_p[rand_p][i] = sum
             #if count % 100 == 0:
             energy_list.append(energy_function(w, dist_p[p]))
-            #generate_image(dist_p[rand_p])
+            acc_list.append(accuracy(natural_p[p],dist_p[p]))
             count += 1
-        return energy_list
+        generate_image(dist_p[rand_p])
+        return energy_list,acc_list
 
 
 def test_hopfield(w, dist_p, normal_p):
@@ -120,12 +122,12 @@ def test_hopfield(w, dist_p, normal_p):
         recalled_pattern = hopfield_recall(w, p)
     acc_list.append(accuracy(normal_p, recalled_pattern))
     # print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
-    # generate_image(tmp_p)
-    # generate_image(recalled_pattern)
+    #generate_image(normal_p)
+    #generate_image(recalled_pattern)
     return acc_list
 
 
-def calculate_weight_matrix(w, pattern_list, scale=False):
+def calculate_weight_matrix(w, pattern_list, scale=True):
     """
     @spec calculate_weight_matrix(np.array(), np.array()) :: np.array()
         Returns a modified weight matrix, where all weights have been calculated given formula below.
@@ -221,11 +223,36 @@ def main():
     """
     data = read_file()
     # pure_patterns, dist_patterns = generate_input_patterns()
-    mod_data = data[:3, :N]
-    generate_image(mod_data[2])
-    w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
+    #mod_data = data[0:4, :N]
+    mod_data = np.vstack((data[:3, :N], data[7, :N]))
+
     super_acc_list = []
     average = 0
+    flipper = 10
+
+    random_patterns = np.random.randint(-1,1,(T_P,N))
+
+    for i in range(len(random_patterns)):
+        for j in range(len(random_patterns[0])):
+            if random_patterns[i][j] >= 0:
+                random_patterns[i][j] = 1
+            else:
+                random_patterns[i][j] = -1
+    w = calculate_weight_matrix(generate_weight_matrix(), random_patterns)
+    temp_data = flip_data(random_patterns.copy(), flipper)
+    print(random_patterns.shape)
+    for i in range(len(random_patterns)):
+        acc_list = test_hopfield(w, temp_data[i],random_patterns[i])
+        print(acc_list)
+
+
+
+        #print(e_list)
+    #plot_acc(acc_list,[i for i in range(len(acc_list))],"p1")
+    #plt.show()
+    #sum = np.sum(acc_list) / len(acc_list)
+
+    """
     for i in range(1, 101):
         print(i)
         temp_data = flip_data(mod_data.copy(), i)
@@ -262,6 +289,8 @@ def main():
             # plot_acc(acc_list, it_l, "p1")
     plot_acc(super_acc_list3, [i * 10 for i in range(len(super_acc_list3))], "p3")
     plt.show()
+    """
+
     # w = np.random.normal(0,1,(N,N))
     # wsym = 0.5 * (w*w.T)
     # for p in mod_data:
