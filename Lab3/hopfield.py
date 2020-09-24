@@ -216,7 +216,8 @@ def recalculate_stable_points(patterns):
     num_good_list = []
     for i in range(T_P):
         print(f"Number of patterns trained: {i}")
-        w = calculate_weight_matrix(w, patterns, i)
+        w += np.outer(patterns[i], patterns[i])
+        # calculate_weight_matrix(w, patterns, i)
         # nu ska vi kolla hur många patterns som är stable
         num_good_list.append(modified_test_hopfield(w, patterns[:i]))
     plot_acc(num_good_list, [i for i in range(len(num_good_list))], "stable patterns")
@@ -333,8 +334,8 @@ def main():
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
     # acc_l = test_sequential_hopfield(w, [data[9], data[10]])
     # acc_l1 = test_sequential_hopfield(wsym, [data[9], data[10]])
-    #print(acc_l)
-    #print(acc_l[1])
+    # print(acc_l)
+    # print(acc_l[1])
     # it_l = [i for i in range(len(acc_l))]
     # plot_acc(acc_l, it_l)
     # plot_acc(acc_l1, it_l)
