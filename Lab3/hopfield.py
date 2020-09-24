@@ -102,28 +102,32 @@ def test_sequential_hopfield(w, dist_p):
         return energy_list
 
 
-def test_hopfield(w, dist_p):
+def test_hopfield(w, dist_p,normal_p):
     """
     @spec test_hopfield(np.array(), np.array()) :: void
         Iteratively try and recall the original pattern given a distorted pattern.
         This recalled pattern is called a 'Fixed point' if we apply the update_rule and get the same pattern back.
     """
     # Iteratively call hopfield_recall/2 here to see convergence until recalled same pure pattern.
+    acc_list = [[] for i in range(3)]
+    count = 0
     for p in dist_p:
         tmp_p = p
         recalled_pattern = hopfield_recall(w, p)
         while not np.array_equal(recalled_pattern, p):
+            acc_list[count].append(accuracy(normal_p[count],recalled_pattern))
             # print(f"The pattern {p} did not reach fixed point within {count} iterations.\n    |-> The last recalled"
             #      f" pattern looks like {recalled_pattern}")
             p = recalled_pattern
             recalled_pattern = hopfield_recall(w, p)
-        print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
-        generate_image(tmp_p)
-        generate_image(recalled_pattern)
-    return
+        count += 1
+        #print(f"The pattern vector {tmp_p} and recalled fixed point {recalled_pattern}")
+        #generate_image(tmp_p)
+        #generate_image(recalled_pattern)
+    return acc_list
 
 
-def calculate_weight_matrix(w, pattern_list, scale=True):
+def calculate_weight_matrix(w, pattern_list, scale=False):
     """
     @spec calculate_weight_matrix(np.array(), np.array()) :: np.array()
         Returns a modified weight matrix, where all weights have been calculated given formula below.
@@ -175,13 +179,16 @@ def generate_input_patterns():
 
 
 def plot_acc(acc, it):
-    plt.plot(it, acc, color="green")
+    plt.plot(it, acc)
     plt.grid()
-    plt.ylabel("Energy")
+    plt.ylabel("Accuracy")
     plt.xlabel("number of iterations")
-    plt.show()
-
-
+    # plt.show()
+def flip_data(data,i):
+    for row in range(len(data)):
+        idx = np.random.choice(N, i*10, replace=False)
+        data[row][idx] *= -1
+    return data
 def main():
     """
     Hebbian learning: (non-supervised)
@@ -215,20 +222,35 @@ def main():
     # pure_patterns, dist_patterns = generate_input_patterns()
     mod_data = data[:3, :N]
     w = calculate_weight_matrix(generate_weight_matrix(), mod_data)
-    w = np.random.normal(0,1,(N,N))
+    for i in range(99):
+        temp_data = mod_data
+        temp_data = flip_data(temp_data,i)
+        acc_list = test_hopfield(w,temp_data,mod_data)
+        #print(acc_list)
+        it_l = [i for i in range(len(acc_list[0]))]
+        it_l1 = [i for i in range(len(acc_list[1]))]
+        it_l2 = [i for i in range(len(acc_list[2]))]
+        if(i % 10 == 0):
+            plot_acc(acc_list[0], it_l)
+            plot_acc(acc_list[1],it_l1)
+            plot_acc(acc_list[2], it_l2)
+            plt.show()
+
+
+    # w = np.random.normal(0,1,(N,N))
     wsym = 0.5 * (w*w.T)
     # for p in mod_data:
     #    print(energy_function(w, p))
     # print(energy_function(w, data[5]))
     # W is now set up from the pure training patterns. We will now see how well the network can recall the
     #       training patterns based on distorted versions of them. Remember to look at convergence rate!
-    acc_l = test_sequential_hopfield(w, [data[9], data[10]])
-    acc_l1 = test_sequential_hopfield(wsym, [data[9], data[10]])
+    # acc_l = test_sequential_hopfield(w, [data[9], data[10]])
+    # acc_l1 = test_sequential_hopfield(wsym, [data[9], data[10]])
     #print(acc_l)
     #print(acc_l[1])
-    it_l = [i for i in range(len(acc_l))]
-    plot_acc(acc_l, it_l)
-    plot_acc(acc_l1, it_l)
+    # it_l = [i for i in range(len(acc_l))]
+    # plot_acc(acc_l, it_l)
+    # plot_acc(acc_l1, it_l)
 
     # recalled_pattern = hopfield_recall(w, pattern_l[1])
     # print(recalled_pattern)
