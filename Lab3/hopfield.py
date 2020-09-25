@@ -62,7 +62,7 @@ def generate_image(pattern):
     """
     GENERATE THE IMAGE FROM A PATTERN
     """
-    pattern = pattern.reshape((32, 32))
+    pattern = pattern.reshape((10, 10))
     plt.imshow(pattern, interpolation='nearest')
     plt.show()
 
@@ -184,45 +184,54 @@ def plot_acc(acc, it, lbl):
     plt.legend()
     plt.ylabel("Number of stable points")
     plt.xlabel("Number of patterns learned")
-    plt.show()
 
 
 def flip_data(data, i):
     for row in range(len(data)):
-        idx = np.random.choice(N, i*10, replace=False)
+        idx = np.random.choice(N, i, replace=False)
         data[row][idx] *= -1
     return data
 
 
-def modified_test_hopfield(w, pattern_list):
+def stable_pattern(w, p):
+    """
+    LEGACY
+    """
+    return (p == hopfield_recall(w, p)).all()
+
+
+def modified_test_hopfield(w, pattern_list, naty):
     """
     @spec test_hopfield(np.array(), np.array()) :: void
         Iteratively try and recall the original pattern given a distorted pattern.
         This recalled pattern is called a 'Fixed point' if we apply the update_rule and get the same pattern back.
     """
     num_good = 0
-    for p in pattern_list:
-        naty = p
+    for i, p in enumerate(pattern_list):
+        nat = naty[i]
         recalled_pattern = hopfield_recall(w, p)
         if not np.array_equal(recalled_pattern, p):
             p = recalled_pattern
             recalled_pattern = hopfield_recall(w, p)
-        if accuracy(naty, recalled_pattern) > 0.99:
+        # print(accuracy(nat, recalled_pattern))
+        if accuracy(nat, recalled_pattern) > 0.99:
             num_good += 1
     return num_good
 
 
-def recalculate_stable_points(patterns):
-    w = generate_weight_matrix()
-    plot_energy_landscape(w, 1)
+def recalculate_stable_points(w, patterns, naty, noise):
+    # plot_energy_landscape(w, 1)
     num_good_list = []
     for i in range(T_P):
         print(f"Number of patterns trained: {i}")
         w += np.outer(patterns[i], patterns[i])
         # calculate_weight_matrix(w, patterns, i)
         # nu ska vi kolla hur många patterns som är stable
-        num_good_list.append(modified_test_hopfield(w, patterns[:i]))
-    plot_acc(num_good_list, [i for i in range(len(num_good_list))], "stable patterns")
+        num_good_list.append(modified_test_hopfield(w, patterns[:i], naty))
+    lbl = "stable patterns"
+    if noise:
+        lbl = "noisy patterns"
+    plot_acc(num_good_list, [i for i in range(len(num_good_list))], lbl)
 
 
 def plot_energy_landscape(w, pattern):
@@ -274,7 +283,10 @@ def main():
     # super_acc_list = []
     # average = 0
     # flipper = 10
-    random_patterns = np.random.randint(-1,1,(T_P,N))
+    # flipper = 10
+    # flipper = 10# flipper = 10
+
+    random_patterns = np.random.randint(-1, 1, (T_P, N))
 
     for i in range(len(random_patterns)):
         for j in range(len(random_patterns[0])):
@@ -282,11 +294,16 @@ def main():
                 random_patterns[i][j] = 1
             else:
                 random_patterns[i][j] = -1
-
-    recalculate_stable_points(random_patterns)
-
+    w = generate_weight_matrix()
+    w1 = w.copy()
+    w2 = w.copy()
+    # recalculate_stable_points(w1, random_patterns, random_patterns, False)
+    flipper = 10
+    tmp = flip_data(random_patterns.copy(), flipper)
+    recalculate_stable_points(w2, tmp, random_patterns, True)
+    plt.show()
     # w = calculate_weight_matrix(generate_weight_matrix(), random_patterns)
-    # temp_data = flip_data(random_patterns.copy(), flipper)
+    #
     # print(random_patterns.shape)
     # for i in range(len(random_patterns)):
     #    acc_list = test_hopfield(w, temp_data[i],random_patterns[i])
