@@ -72,9 +72,7 @@ def hopfield_recall(w, patterns):
     @spec hopfield_recall(np.array(), np.array()) :: np.array()
         Recalling a pattern of activation x. The implemented variant is the 'Little model'.
     """
-    res = np.dot(patterns, w)
-    res = np.sign(res)
-    return res
+    return np.sign(np.dot(patterns, w))
 
 
 def test_sequential_hopfield(w, dist_p,natural_p):
@@ -210,9 +208,9 @@ def modified_test_hopfield(w, pattern_list, naty):
     for i, p in enumerate(pattern_list):
         nat = naty[i]
         recalled_pattern = hopfield_recall(w, p)
-        if not np.array_equal(recalled_pattern, p):
+        while not np.array_equal(recalled_pattern, p):
             p = recalled_pattern
-            recalled_pattern = hopfield_recall(w, p)
+            recalled_pattern = hopfield_recall(w[i], p)
         # print(accuracy(nat, recalled_pattern))
         if accuracy(nat, recalled_pattern) > 0.99:
             num_good += 1
@@ -294,10 +292,11 @@ def main():
                 random_patterns[i][j] = 1
             else:
                 random_patterns[i][j] = -1
+    print(random_patterns)
     w = generate_weight_matrix()
     w1 = w.copy()
     w2 = w.copy()
-    # recalculate_stable_points(w1, random_patterns, random_patterns, False)
+    recalculate_stable_points(w1, random_patterns, random_patterns, False)
     flipper = 10
     tmp = flip_data(random_patterns.copy(), flipper)
     recalculate_stable_points(w2, tmp, random_patterns, True)
