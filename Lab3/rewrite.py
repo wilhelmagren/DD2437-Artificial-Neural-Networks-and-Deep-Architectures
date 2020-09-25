@@ -16,6 +16,8 @@ N = 100
 T_P = 300
 # PERCENTAGE TO FLIP
 flipper = 20
+# AVERAGE
+ro = 0.01
 
 
 def energy_function(w, pattern):
@@ -46,16 +48,20 @@ def plot_acc(acc, it, lbl):
     plt.plot(it, acc, label=lbl)
     plt.grid()
     plt.legend()
-    plt.ylabel("Number of stable points")
+    plt.ylabel(f"Number of stable points")
     plt.xlabel("Number of patterns learned")
 
 
-def update_rule(w, patterns):
+def sign(x):
+    return np.where(x < 0, -1, 1)
+
+
+def update_rule(pattern, weights, bias):
     """
     @spec hopfield_recall(np.array(), np.array()) :: np.array()
         Recalling a pattern of activation x. The implemented variant is the 'Little model'.
     """
-    return np.sign(np.dot(patterns, w))
+    return 0.5 + 0.5*sign(np.dot(pattern, weights) - bias)
 
 
 def flip_pattern(patterns):
@@ -134,19 +140,67 @@ def train(pattern, pure, noise=True):
         lbl = "noisy"
     plot_acc(num_stable, [i for i in range(len(num_stable))], lbl)
 
+"""
+def sparse_update_rule(w, pattern):
+    return 0.5 + 0.5*np.sign(np.dot(w, pattern) - theta)
+"""
+
+
+def sparse_learning_rule(w, pattern, avg_p, ppp):
+    for i in range(N):
+        for j in range(N):
+            w[i][j] = (pattern[i] - avg_p)*(pattern[j] - avg_p)
+    return w
+
+
+def average_activity(pattern):
+    sum = 0
+    for i in range(P):
+        for j in range(N):
+            sum += pattern[i][j]
+    sum /= (N*P)
+    return sum
+
+
+def create_random_pattern(Nb_of_patterns, length, threshold):
+    pattern = np.random.rand(Nb_of_patterns, length)
+    pattern = np.where(pattern < threshold, 1, 0)
+    return pattern
+
+
+def calc_weights(pattern, normalize=False, remove_selfcons=False):
+    rho = 1/(pattern.shape[0]*pattern.shape[1])*np.sum(pattern)
+    pattern = pattern - rho
+    weights = pattern.T.dot(pattern)
+    if normalize:
+        weights = weights/pattern.shape[1]
+    if remove_selfcons:
+        np.fill_diagonal(weights, 0)
+    return weights
+
+
+def is_pattern_stable(pattern, weights, bias):
+    return (pattern == update_rule(pattern, weights, bias)).all()
+
 
 def main():
     print("in main")
-    random_patterns = np.random.randn(P, N)
-    for i in range(len(random_patterns)):
-        for j in range(len(random_patterns[0])):
-            if random_patterns[i][j] >= 0:
-                random_patterns[i][j] = 1
-            else:
-                random_patterns[i][j] = -1
-    noise_patterns = flip_pattern(random_patterns.copy())
-    train(random_patterns.copy(), random_patterns.copy(), False)
-    train(noise_patterns.copy(), random_patterns.copy())
+    pattern = create_random_pattern(P, N, ro)
+    w = calc_weights(pattern)
+    np.max(w)
+    theta_map = np.arange(1, 10, 3)
+    for theta in theta_map:
+        print(f"theta = {theta}")
+        num_stable = []
+        for i in range(P):
+            count = 0
+            print(f"Number of patterns trained: {i}")
+            w = calc_weights(pattern[:i + 1], remove_selfcons=True)
+            for k in range(i + 1):
+                if is_pattern_stable(pattern[k], w, theta):
+                    count += 1
+            num_stable.append(count / (i + 1))
+        plot_acc(num_stable, [i for i in range(len(num_stable))], f"theta = {theta}")
     plt.show()
 
 
