@@ -15,7 +15,7 @@ N = 100
 # T_P is the number of patterns we train on
 T_P = 300
 # PERCENTAGE TO FLIP
-flipper = 10
+flipper = 20
 
 
 def energy_function(w, pattern):
@@ -116,10 +116,10 @@ def train(pattern, pure, noise=True):
     num_stable = []
     w = np.zeros((N, N))
     w += np.outer(pure[0], pure[0])
-    for i in range(1, P):
+    for i in range(1, 100):
         print(f"Number of patterns trained: {i}")
         w += np.outer(pure[i], pure[i])
-        np.fill_diagonal(w, 0)
+        # np.fill_diagonal(w, 0)
         # Calculate number of stable patterns
         # num_stable.append(num_stable_states_batch(w, pattern[:i + 1], pure[:i + 1]))
         count = 0
@@ -128,7 +128,7 @@ def train(pattern, pure, noise=True):
             recalled = update_rule(w, pattern[k])
             if np.array_equal(recalled, correct_pattern):
                 count += 1
-        num_stable.append(count/(i))
+        num_stable.append(count/i)
     lbl = "clean"
     if noise:
         lbl = "noisy"
@@ -137,7 +137,7 @@ def train(pattern, pure, noise=True):
 
 def main():
     print("in main")
-    random_patterns = np.random.randint(-1, 1, (P, N))
+    random_patterns = np.random.randn(P, N)
     for i in range(len(random_patterns)):
         for j in range(len(random_patterns[0])):
             if random_patterns[i][j] >= 0:
