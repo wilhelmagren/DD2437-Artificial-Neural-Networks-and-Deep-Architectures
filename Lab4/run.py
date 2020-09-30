@@ -10,7 +10,7 @@ if __name__ == "__main__":
     ''' restricted boltzmann machine '''
     
     print ("\nStarting a Restricted Boltzmann Machine..")
-    hidden_list = [200, 300, 400, 500]
+    hidden_list = [500]
     CHRIPPEWOW1LIST_BIG_ENERGY = []
     for i in hidden_list:
         print(f"Starting hidden units = {i}")
@@ -24,14 +24,6 @@ if __name__ == "__main__":
         )
 
         l = rbm.cd1(visible_trainset=train_imgs, n_iterations=20)
-        CHRIPPEWOW1LIST_BIG_ENERGY.append(l)
-    for idx, k in enumerate(CHRIPPEWOW1LIST_BIG_ENERGY):
-        plt.plot([x for x in range(1, len(k) + 1)], k, label=f"{hidden_list[idx]} hidden units")
-    plt.ylabel("Mean Square Reconstruction Error")
-    plt.xlabel("Epoch number")
-    plt.legend()
-    plt.grid()
-    plt.show()
     ''' deep- belief net '''
 
     print ("\nStarting a Deep Belief Net..")

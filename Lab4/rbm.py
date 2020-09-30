@@ -81,6 +81,7 @@ class RestrictedBoltzmannMachine():
         recon_list = []
         n_samples = visible_trainset.shape[0]
         swift_one_shot = int(n_samples/self.batch_size)
+        weight_list = []
         for it in range(n_iterations):
             print(f"Epoch {it + 1}")
             for b_indx in range(swift_one_shot):
@@ -110,6 +111,10 @@ class RestrictedBoltzmannMachine():
             hp, h = self.get_h_given_v(visible_trainset)
             vp, v = self.get_v_given_h(h)
             recon_list.append(np.sum((visible_trainset - v) ** 2) / n_samples)
+            temp = self.weight_h_to_v.copy()
+            temp.flatten()
+            plt.hist(temp,bins=10)
+            plt.show()
         return recon_list
     
 
