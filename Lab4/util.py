@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 
 def sigmoid(support):
     
@@ -115,6 +116,7 @@ def viz_rf(weights,it,grid):
     plt.savefig("rf.iter%06d.png"%it)
     plt.close('all')
 
+
 def stitch_video(fig,imgs):
     """
     Stitches a list of images and returns a animation object
@@ -122,3 +124,19 @@ def stitch_video(fig,imgs):
     import matplotlib.animation as animation
     
     return animation.ArtistAnimation(fig, imgs, interval=100, blit=True, repeat=False)    
+
+
+def save_img(filename, image, form='png'):
+    image = image.reshape((28, 28)) * 255
+
+    if form == 'png':
+        image = Image.fromarray(image.astype(np.uint8))
+        image.save(filename + '.png', format='PNG')
+    else:
+        image = image.astype(int)
+        with open(filename + ".pgm", "w") as f:
+            f.write("P2\n28 28\n255\n")
+            for i in range(28):
+                for j in range(28):
+                    f.write(str(image[i,j]) + ' ')
+                f.write("\n")

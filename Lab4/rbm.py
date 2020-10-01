@@ -110,10 +110,11 @@ class RestrictedBoltzmannMachine():
 
             hp, h = self.get_h_given_v(visible_trainset)
             vp, v = self.get_v_given_h(h)
+            #save_img("chrippewowtest.jpg", vp)
             recon_list.append(np.sum((visible_trainset - v) ** 2) / n_samples)
             temp = self.weight_h_to_v.copy()
             temp.flatten()
-            plt.hist(temp,bins=10)
+            plt.hist(temp, bins=10)
             plt.show()
         return recon_list
     
@@ -170,7 +171,7 @@ class RestrictedBoltzmannMachine():
         return h_p, h_a
 
 
-    def get_v_given_h(self,hidden_minibatch):
+    def get_v_given_h(self, hidden_minibatch):
         
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
 
@@ -198,8 +199,14 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-            pass
-            
+            support = self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T)
+            data_s, label_s = support[:, :-self.n_labels], support[:, -self.n_labels:]
+            data_p = sigmoid(data_s)
+            label_p = softmax(label_s)
+            data_samples = sample_binary(data_p)
+            label_samples = sample_categorical(label_p)
+            v_p = np.concatenate((data_p, label_p), axis=1)
+            v_a = np.concatenate((data_samples, label_samples), axis=1)
         else:
                         
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)             
@@ -220,7 +227,8 @@ class RestrictedBoltzmannMachine():
         self.weight_h_to_v = np.copy( np.transpose(self.weight_vh) )
         self.weight_vh = None
 
-    def get_h_given_v_dir(self,visible_minibatch):
+
+    def get_h_given_v_dir(self, visible_minibatch):
 
         """Compute probabilities p(h|v) and activations h ~ p(h|v)
 
@@ -238,8 +246,9 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below) 
-        
-        return np.zeros((n_samples,self.ndim_hidden)), np.zeros((n_samples,self.ndim_hidden))
+        h_p = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_v_to_h))
+        h_a = sample_binary(h_p)
+        return h_p, h_a
 
 
     def get_v_given_h_dir(self,hidden_minibatch):
@@ -272,16 +281,15 @@ class RestrictedBoltzmannMachine():
             # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
-            
-            pass
+            raise Exception("sorry but this is wrong :O CHRIPPEWOW1 RESUB NOW FOR LIMITED EDITION PAWEL ONLY FANS")
             
         else:
                         
-            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
-
-            pass
+            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
+            v_p = sigmoid(self.bias_v + np.dot(hidden_minibatch, self.weight_h_to_v.T))
+            v_a = sample_binary(v_p)
             
-        return np.zeros((n_samples,self.ndim_visible)), np.zeros((n_samples,self.ndim_visible))        
+        return v_p, v_a
         
     def update_generate_params(self,inps,trgs,preds):
         
