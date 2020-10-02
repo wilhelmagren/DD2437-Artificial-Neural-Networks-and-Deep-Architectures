@@ -143,7 +143,6 @@ def save_img(filename, image, form='png'):
 
 
 def plot_images(img, label, max=30):
-    label = label.flatten()
     if img.shape[0] > max:
         img = img[0:max]
     fig = plt.figure(figsize=(28, 28))

@@ -36,24 +36,24 @@ if __name__ == "__main__":
     
     ''' greedy layer-wise training '''
 
-    layer_list = dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10)
-    plt.title("Recon loss for DBN layers")
-    plt.xlabel("Epoch")
-    epochs = np.arange(10)
-    plt.ylabel("Mean Square Reconstruction Error")
-    label_recon = {
-        0: "vis--hid",
-        1: "hid--pen",
-        2: "pen+lbl--top"
-    }
-    for i in range(3):
-        plt.plot(epochs, layer_list[i], label=label_recon[i])
+    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10)
+    #plt.title("Recon loss for DBN layers")
+    #plt.xlabel("Epoch")
+    #epochs = np.arange(10)
+    #plt.ylabel("Mean Square Reconstruction Error")
+    #label_recon = {
+    #    0: "vis--hid",
+    #    1: "hid--pen",
+    #    2: "pen+lbl--top"
+    #}
+    #for i in range(3):
+    #    plt.plot(epochs, layer_list[i], label=label_recon[i])
 
-    plt.legend()
-    plt.grid()
-    plt.show()
+    #plt.legend()
+    #plt.grid()
+    #plt.show()
 
-    dbn.recognize(train_imgs, train_lbls)
+    # dbn.recognize(train_imgs, train_lbls)
     
     dbn.recognize(test_imgs, test_lbls)
 

@@ -55,91 +55,77 @@ class DeepBeliefNet():
     def recognize(self, true_img, true_lbl):
 
         """Recognize/Classify the data into label categories and calculate the accuracy
-
         Args:
           true_imgs: visible data shaped (number of samples, size of visible layer)
           true_lbl: true labels shaped (number of samples, size of label layer). Used only for calculating accuracy, not driving the net
         """
 
         n_samples = true_img.shape[0]
-        n_lbl = true_lbl.shape[0]
-        vis = true_img # visible layer gets the image data
+        n_labels = true_lbl.shape[1]
 
-        lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels
-        print(true_img[true_img > 0])
-        # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top. In the top RBM, run alternating Gibbs sampling \
-        # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
-        # NOTE : inferring entire train/test set may require too much compute memory (depends on your system). In that case, divide into mini-batches.
+        vis = true_img  # visible layer gets the image data
 
-        h_l_out = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)[1]
+        lbl = np.ones(true_lbl.shape) / 10.  # start the net by telling you know nothing about labels
 
-        print("PENETRATION LAYER")
-        p_l_out = self.rbm_stack["hid--pen"].get_h_given_v_dir(h_l_out)[1]
-        output_good = np.concatenate((p_l_out, lbl), axis=1)
+        print("vis--hid")
+        hidOut = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
 
+        print("hid--pen")
+        penOut = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidOut)[1]
+        penLblIn = np.concatenate((penOut, lbl), axis=1)
 
         for _ in range(self.n_gibbs_recog):
-            print("adagio for strings untz untz wow gibb RAFFA MIG NÅGON?")
-            top_boy_out = self.rbm_stack["pen+lbl--top"].get_h_given_v(output_good)[1]
-            output_good = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_boy_out)[1]
+            print("pen+lbl--top")
+            topOut = self.rbm_stack['pen+lbl--top'].get_h_given_v(penLblIn)[1]
+            penLblIn = self.rbm_stack['pen+lbl--top'].get_v_given_h(topOut)[1]
 
+        predicted_lbl = penLblIn[:, -n_labels:]
 
-        predicted_lbl = output_good[:, -n_lbl:]
-        print(predicted_lbl)
-        prediction_chrippe = []
-        for pred in predicted_lbl:
-            prediction_chrippe.append(np.where(pred==1)[0])
-        print("PLotting hte pictures")
-        plot_images(true_img, np.array(prediction_chrippe))
-
-        print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl,axis=1)==np.argmax(true_lbl,axis=1))))
+        print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
         return
 
     def generate(self, true_lbl, name):
 
         """Generate data from labels
-
         Args:
           true_lbl: true labels shaped (number of samples, size of label layer)
           name: string used for saving a video of generated visible activations
         """
+        print('generate')
 
         n_sample = true_lbl.shape[0]
         n_labels = true_lbl.shape[1]
 
         records = []
-        fig,ax = plt.subplots(1,1,figsize=(3,3))
+        fig, ax = plt.subplots(1, 1, figsize=(3, 3))  # ,constrained_layout=True)
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-        ax.set_xticks([]); ax.set_yticks([])
+        ax.set_xticks([]);
+        ax.set_yticks([])
 
         lbl = true_lbl
         random_img = np.random.randn(n_sample, self.sizes['vis'])
-        random_img[random_img > 1] = 1
-        random_img[random_img < 0] = 0
+        hidOut = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
+        penOut = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidOut)[1]
 
-        hidden_layer_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
-        pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidden_layer_out)[1]
-        # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \
-        # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
+        lblIn = np.concatenate((penOut, lbl), axis=1)
 
-        lbl_in = np.concatenate((pen_out, lbl), axis=1)
-        for i in range(self.n_gibbs_gener):
-            lbl_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_in)[1]
-            lbl_in = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_out)[1]
-            lbl_in[:, -n_labels:] = lbl[:, :]
+        for _ in range(self.n_gibbs_gener):
+            lblOut = self.rbm_stack['pen+lbl--top'].get_h_given_v(lblIn)[1]
+            lblIn = self.rbm_stack['pen+lbl--top'].get_v_given_h(lblOut)[1]
+            lblIn[:, -n_labels:] = lbl[:, :]
 
-            pen = lbl_in[:, :-n_labels]
+            pen = lblIn[:, :-n_labels]
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
 
-            # records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
-            #                          interpolation=None)])
-            if i % 100 == 0:
-                records.append(vis)
+            records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
+                                      interpolation=None)])
 
-        # stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
-        plot_images(np.array(records), np.arange(0, 10)[int((np.where(true_lbl == 1))[0])] * np.ones(len(records)))
+        for i in records:
+            plt.imshow(i)
+        #plot_images(np.array(records), np.arange(0, 10)[int((np.where(true_lbl == 1))[0])] * np.ones(len(records)))
+        anim = stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
         return
 
     def train_greedylayerwise(self, vis_trainset, lbl_trainset, n_iterations):
@@ -153,7 +139,7 @@ class DeepBeliefNet():
           lbl_trainset: label data shaped (size of training set, size of label layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-        layer_records = np.zeros((3, n_iterations))
+
         try:
 
             self.loadfromfile_rbm(loc="trained_rbm", name="vis--hid")
@@ -165,41 +151,39 @@ class DeepBeliefNet():
             self.loadfromfile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
         except IOError:
-            # RBM
-            # [TODO TASK 4.2] use CD-1 to train all RBMs greedily
+
             print("training vis--hid")
             """ 
-            CD-1 training for vis--hid
+            CD-1 training for vis--hid 
             """
-            layer_records[0] = self.rbm_stack['vis--hid'].cd1(vis_trainset, n_iterations)
+            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations)
+
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
 
             print("training hid--pen")
-
-            self.rbm_stack['vis--hid'].untwine_weights()
-            inp = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_trainset)[1]
-
-            # SBN
+            self.rbm_stack["vis--hid"].untwine_weights()
+            """ 
+            CD-1 training for hid--pen 
             """
-            CD-1 training for hid--pen
-            """
+            # Get output from previous layer
+            hidOut = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]
+            self.rbm_stack["hid--pen"].cd1(hidOut, n_iterations)
 
-            layer_records[1] = self.rbm_stack['hid--pen'].cd1(inp, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
             print("training pen+lbl--top")
-
-            self.rbm_stack['hid--pen'].untwine_weights()
-            out = self.rbm_stack['hid--pen'].get_h_given_v_dir(inp)[1]
-            out = np.concatenate((out, lbl_trainset), axis=1)
+            self.rbm_stack["hid--pen"].untwine_weights()
             """ 
             CD-1 training for pen+lbl--top 
             """
+            penOut = self.rbm_stack["hid--pen"].get_h_given_v_dir(hidOut)[1]
+            penOut = np.concatenate((penOut, lbl_trainset), axis=1)
 
-            layer_records[2] = self.rbm_stack['pen+lbl--top'].cd1(out, n_iterations)
+            self.rbm_stack["pen+lbl--top"].cd1(penOut, n_iterations)
+
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
-        return layer_records
+        return
 
     def train_wakesleep_finetune(self, vis_trainset, lbl_trainset, n_iterations):
 
