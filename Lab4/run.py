@@ -9,23 +9,23 @@ if __name__ == "__main__":
 
     ''' restricted boltzmann machine '''
     
-    print ("\nStarting a Restricted Boltzmann Machine..")
-    hidden_list = [500]
-    CHRIPPEWOW1LIST_BIG_ENERGY = []
-    for i in hidden_list:
-        print(f"Starting hidden units = {i}")
-        rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
-                                         ndim_hidden=i,
-                                         is_bottom=True,
-                                         image_size=image_size,
-                                         is_top=False,
-                                         n_labels=10,
-                                         batch_size=20
-        )
-
-        l = rbm.cd1(visible_trainset=train_imgs, n_iterations=20)
+    # print ("\nStarting a Restricted Boltzmann Machine..")
+    # hidden_list = [500]
+    # CHRIPPEWOW1LIST_BIG_ENERGY = []
+    # for i in hidden_list:
+    #     print(f"Starting hidden units = {i}")
+    #     rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
+    #                                     ndim_hidden=i,
+    #                                     is_bottom=True,
+    #                                     image_size=image_size,
+    #                                     is_top=False,
+    #                                     n_labels=10,
+    #                                     batch_size=20
+    #    )
+    #
+    #    l = rbm.cd1(visible_trainset=train_imgs, n_iterations=20)
     ''' deep- belief net '''
-
+    #
     print ("\nStarting a Deep Belief Net..")
     
     dbn = DeepBeliefNet(sizes={"vis":image_size[0]*image_size[1], "hid":500, "pen":500, "top":2000, "lbl":10},
@@ -36,7 +36,22 @@ if __name__ == "__main__":
     
     ''' greedy layer-wise training '''
 
-    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10000)
+    layer_list = dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10)
+    plt.title("Recon loss for DBN layers")
+    plt.xlabel("Epoch")
+    epochs = np.arange(10)
+    plt.ylabel("Mean Square Reconstruction Error")
+    label_recon = {
+        0: "vis--hid",
+        1: "hid--pen",
+        2: "pen+lbl--top"
+    }
+    for i in range(3):
+        plt.plot(epochs, layer_list[i], label=label_recon[i])
+
+    plt.legend()
+    plt.grid()
+    plt.show()
 
     dbn.recognize(train_imgs, train_lbls)
     
