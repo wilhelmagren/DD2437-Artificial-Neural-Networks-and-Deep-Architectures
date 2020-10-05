@@ -63,9 +63,8 @@ class DeepBeliefNet():
         
         n_samples = true_img.shape[0]
         n_lbl = true_lbl.shape[1]
-
         vis = true_img  # visible layer gets the image data
-        
+        # THIS WORKDS TO PLOT THE IMAGES -> plot_image(true_img[0], prediction[0])
         lbl = np.ones(true_lbl.shape)/10.  # start the net by telling you know nothing about labels
         
         # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top. In the top RBM, run alternating Gibbs sampling \
@@ -83,7 +82,7 @@ class DeepBeliefNet():
         pen_lbl = np.concatenate((pen_out, lbl), axis=1)
 
         # Temporary initialization of the array
-        pen_lbl_in = []
+        # pen_lbl_in = []
 
         for idx in range(self.n_gibbs_recog):
             print(f"### pen+lbl -- top {idx+1} ###")
@@ -91,9 +90,16 @@ class DeepBeliefNet():
             top_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(pen_lbl)[1]
             # Calculate the visible layer output given the hidden layer samples
             # This will be input to lbl+pen layer to see if our output is correct?
-            pen_lbl_in = self.rbm_stack['pen+lbl--top'].get_v_given_h(top_out)[1]
+            pen_lbl = self.rbm_stack['pen+lbl--top'].get_v_given_h(top_out)[1]
 
-        predicted_lbl = pen_lbl_in[:, -n_lbl:]
+        predicted_lbl = pen_lbl[:, -n_lbl:]
+        predicted_list = []
+        for predicted in predicted_lbl:
+            predicted_list.append(np.where(predicted == 1)[0])
+
+        for idx, img in enumerate(true_img):
+            plot_image(img, np.array(predicted_list[idx]))
+
         print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
         return
 
@@ -112,30 +118,29 @@ class DeepBeliefNet():
         records = []
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))  # ,constrained_layout=True)
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-        ax.set_xticks([]);
+        ax.set_xticks([])
         ax.set_yticks([])
 
         lbl = true_lbl
         random_img = np.random.randn(n_sample, self.sizes['vis'])
         hidOut = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
         penOut = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidOut)[1]
-
         lblIn = np.concatenate((penOut, lbl), axis=1)
 
         for _ in range(self.n_gibbs_gener):
             lblOut = self.rbm_stack['pen+lbl--top'].get_h_given_v(lblIn)[1]
             lblIn = self.rbm_stack['pen+lbl--top'].get_v_given_h(lblOut)[1]
             lblIn[:, -n_labels:] = lbl[:, :]
-
             pen = lblIn[:, :-n_labels]
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
+
         import matplotlib.animation as animation
         FFwriter = animation.FFMpegWriter(fps=10, extra_args=['-vcodec', 'libx264'])
-        anim = stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)), writer = FFwriter)
+        anim = stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)), writer=FFwriter)
         return
 
 
@@ -172,8 +177,6 @@ class DeepBeliefNet():
             """
             vis_hid_recon = self.rbm_stack['vis--hid'].cd1(vis_trainset, n_iterations)
             recon_storage.append(vis_hid_recon)
-            # GET THE out-sampling from the inputlayer to the hidden layer
-            hid_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_trainset)[1]
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
             self.rbm_stack["vis--hid"].untwine_weights()
 
@@ -182,11 +185,11 @@ class DeepBeliefNet():
             CD-1 training for hid--pen 
             """
             # DO HERE
+            # GET THE out-sampling from the inputlayer to the hidden layer
+            hid_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_trainset)[1]
             hid_pen_recon = self.rbm_stack['hid--pen'].cd1(hid_out, n_iterations)
             recon_storage.append(hid_pen_recon)
-            # Get the pen-sampling given the hidden layer output
-            pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(hid_out)[1]
-            self.savetofile_rbm(loc="trained_rbm",name="hid--pen")            
+            self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
             self.rbm_stack["hid--pen"].untwine_weights()
 
             print ("training pen+lbl--top")
@@ -195,9 +198,12 @@ class DeepBeliefNet():
             """
             # DO HERE
             # USE THE PENIS OUT to train cd1 to top layer
+            # Get the pen-sampling given the hidden layer output
+            pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(hid_out)[1]
+            pen_out = np.concatenate((pen_out, lbl_trainset), axis=1)
             pen_top_recon = self.rbm_stack['pen+lbl--top'].cd1(pen_out, n_iterations)
             recon_storage.append(pen_top_recon)
-            self.savetofile_rbm(loc="trained_rbm",name="pen+lbl--top")
+            self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
         return recon_storage
 
     def train_wakesleep_finetune(self, vis_trainset, lbl_trainset, n_iterations):

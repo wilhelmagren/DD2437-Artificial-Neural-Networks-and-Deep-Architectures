@@ -90,14 +90,17 @@ class RestrictedBoltzmannMachine():
                 # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
                 # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
                 v_0 = minibatch
+
+                # Positive phase
                 _, h_0 = self.get_h_given_v(v_0)
+
+                # Negative phase
                 _, v_k = self.get_v_given_h(h_0)
-                _, h_k = self.get_h_given_v(v_k)
+                h_pk, h_k = self.get_h_given_v(v_k)
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
-                self.update_params(v_0, h_0, v_k, h_k)
-                # visualize once in a while when visible layer is input images
-                if it % self.rf["period"] == 0 and self.is_bottom:
-                    viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
+                self.update_params(v_0, h_0, v_k, h_pk)
+            # visualize every epoch when visible layer is input images
+            # viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=epoch, grid=self.rf["grid"])
 
             # Calculate recon loss for cur epoch
             _, h_0temp = self.get_h_given_v(visible_trainset)
@@ -138,7 +141,7 @@ class RestrictedBoltzmannMachine():
         self.delta_bias_v = self.momentum * self.delta_bias_v + (self.learning_rate/self.batch_size) * (pos_v - neg_v)
 
         # Diff of log probability between cd0 and cd1 - basically gibbs sampling
-        self.delta_weight_vh = self.momentum * self.delta_weight_vh + (self.learning_rate/self.batch_size) * (v_0.T @ h_0 - v_k.T @ h_k)
+        self.delta_weight_vh = self.momentum * self.delta_weight_vh + (self.learning_rate/self.batch_size) * (np.dot(v_0.T, h_0) - np.dot(v_k.T, h_k))
 
         # Take difference of pos and neg h-probabilities
         self.delta_bias_h = self.momentum * self.delta_bias_h + (self.learning_rate/self.batch_size) * (pos_h - neg_h)
@@ -203,6 +206,9 @@ class RestrictedBoltzmannMachine():
 
             # Get the probabilities - negative phase, vi går från hidden till visible det är därför vi behöver self.bias_v
             support = self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T)
+
+            # Threshold support
+            support[support < -75] = -75
 
             # Retrieve the labels:
             #       first -> all labels from 0 -> len(support[0] - n_labels)

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams['animation.ffmpeg_path'] ='C:\\ffmpeg\\bin\\ffmpeg.exe'
 
+
 def sigmoid(support):
     
     """ 
@@ -15,6 +16,7 @@ def sigmoid(support):
     
     on_probabilities = 1./(1.+np.exp(-support))
     return on_probabilities
+
 
 def softmax(support):
 
@@ -30,6 +32,7 @@ def softmax(support):
     expsup = np.exp(support-np.max(support,axis=1)[:,None])
     return expsup / np.sum(expsup,axis=1)[:,None]
 
+
 def sample_binary(on_probabilities):    
 
     """ 
@@ -43,6 +46,7 @@ def sample_binary(on_probabilities):
 
     activations = 1. * ( on_probabilities >= np.random.random_sample(size=on_probabilities.shape) )
     return activations
+
 
 def sample_categorical(probabilities):
 
@@ -61,6 +65,7 @@ def sample_categorical(probabilities):
     activations[range(probabilities.shape[0]),np.argmax((cumsum >= rand),axis=1)] = 1
     return activations
 
+
 def load_idxfile(filename):
 
     """
@@ -75,7 +80,8 @@ def load_idxfile(filename):
         shape = [struct.unpack(">I", _file.read(4))[0] for _ in range(ndim)]
         data = np.fromfile(_file, dtype=np.dtype(np.uint8).newbyteorder('>')).reshape(shape)
     return data
-    
+
+
 def read_mnist(dim=[28,28],n_train=60000,n_test=1000):
 
     """
@@ -100,6 +106,7 @@ def read_mnist(dim=[28,28],n_train=60000,n_test=1000):
 
     return train_imgs[:n_train],train_lbls_1hot[:n_train],test_imgs[:n_test],test_lbls_1hot[:n_test]
 
+
 def viz_rf(weights,it,grid):
 
     """
@@ -116,6 +123,7 @@ def viz_rf(weights,it,grid):
     plt.savefig("rf.iter%06d.png"%it)
     plt.close('all')
 
+
 def stitch_video(fig,imgs):
     """
     Stitches a list of images and returns a animation object
@@ -123,3 +131,9 @@ def stitch_video(fig,imgs):
     import matplotlib.animation as animation
     
     return animation.ArtistAnimation(fig, imgs, interval=100, blit=True, repeat=False)    
+
+
+def plot_image(img, pred):
+    plt.title(f"Predicted {int(pred)}")
+    plt.imshow(img.reshape(28, 28))
+    plt.show()

@@ -22,12 +22,12 @@ if __name__ == "__main__":
     
     # loss_list = rbm.cd1(visible_trainset=train_imgs, n_iterations=10)
 
-    # plt.plot([x for x in range(len(loss_list))], loss_list, label="500 hidden units")
-    # plt.xlabel("Epochs")
-    # plt.ylabel("Reconstruction MSE")
-    # plt.legend()
-    # plt.grid()
-    # plt.show()
+    #plt.plot([x for x in range(len(loss_list))], loss_list, label="500 hidden units")
+    #plt.xlabel("Epochs")
+    #plt.ylabel("Reconstruction MSE")
+    #plt.legend()
+    #plt.grid()
+    #plt.show()
     
     ''' deep- belief net '''
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     }
 
     for i in range(len(recon_list)):
-        plt.plot([x for x in range(recon_list[i])], recon_list[i], label=layer_label[i])
+        plt.plot(it, recon_list[i], label=layer_label[i])
     plt.grid()
     plt.xlabel("Epoch")
     plt.ylabel("Reconstruction MSE")
@@ -58,9 +58,9 @@ if __name__ == "__main__":
     plt.show()
 
     # RECOGNIZE WORKS GREAT!
-    # dbn.recognize(train_imgs, train_lbls)
+    dbn.recognize(train_imgs, train_lbls)
     
-    # dbn.recognize(test_imgs, test_lbls)
+    dbn.recognize(test_imgs, test_lbls)
 
     for digit in range(10):
         digit_1hot = np.zeros(shape=(1,10))
