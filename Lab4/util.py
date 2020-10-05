@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
+plt.rcParams['animation.ffmpeg_path'] ='C:\\ffmpeg\\bin\\ffmpeg.exe'
 
 def sigmoid(support):
     
@@ -116,7 +116,6 @@ def viz_rf(weights,it,grid):
     plt.savefig("rf.iter%06d.png"%it)
     plt.close('all')
 
-
 def stitch_video(fig,imgs):
     """
     Stitches a list of images and returns a animation object
@@ -124,32 +123,3 @@ def stitch_video(fig,imgs):
     import matplotlib.animation as animation
     
     return animation.ArtistAnimation(fig, imgs, interval=100, blit=True, repeat=False)    
-
-
-def save_img(filename, image, form='png'):
-    image = image.reshape((28, 28)) * 255
-
-    if form == 'png':
-        image = Image.fromarray(image.astype(np.uint8))
-        image.save(filename + '.png', format='PNG')
-    else:
-        image = image.astype(int)
-        with open(filename + ".pgm", "w") as f:
-            f.write("P2\n28 28\n255\n")
-            for i in range(28):
-                for j in range(28):
-                    f.write(str(image[i,j]) + ' ')
-                f.write("\n")
-
-
-def plot_images(img, label, max=30):
-    if img.shape[0] > max:
-        img = img[0:max]
-    fig = plt.figure(figsize=(28, 28))
-    rows = int(img.shape[0] / 10)
-    columns = 10
-    for i in range(1, rows * columns + 1):
-        fig.add_subplot(rows, columns, i)
-        plt.title("Predicted: " + str(int(label[i - 1])))
-        plt.imshow(img[i - 1].reshape(28, 28))
-    plt.show()

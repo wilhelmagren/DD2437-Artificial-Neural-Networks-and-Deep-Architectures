@@ -10,58 +10,63 @@ if __name__ == "__main__":
     ''' restricted boltzmann machine '''
     
     # print ("\nStarting a Restricted Boltzmann Machine..")
-    # hidden_list = [500]
-    # CHRIPPEWOW1LIST_BIG_ENERGY = []
-    # for i in hidden_list:
-    #     print(f"Starting hidden units = {i}")
-    #     rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
-    #                                     ndim_hidden=i,
-    #                                     is_bottom=True,
-    #                                     image_size=image_size,
-    #                                     is_top=False,
-    #                                     n_labels=10,
-    #                                     batch_size=20
-    #    )
-    #
-    #    l = rbm.cd1(visible_trainset=train_imgs, n_iterations=20)
+
+    # rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
+    #                                 ndim_hidden=500,
+    #                                 is_bottom=True,
+    #                                 image_size=image_size,
+    #                                 is_top=False,
+    #                                 n_labels=10,
+    #                                 batch_size=10
+    #)
+    
+    # loss_list = rbm.cd1(visible_trainset=train_imgs, n_iterations=10)
+
+    # plt.plot([x for x in range(len(loss_list))], loss_list, label="500 hidden units")
+    # plt.xlabel("Epochs")
+    # plt.ylabel("Reconstruction MSE")
+    # plt.legend()
+    # plt.grid()
+    # plt.show()
+    
     ''' deep- belief net '''
-    #
+
     print ("\nStarting a Deep Belief Net..")
     
     dbn = DeepBeliefNet(sizes={"vis":image_size[0]*image_size[1], "hid":500, "pen":500, "top":2000, "lbl":10},
                         image_size=image_size,
                         n_labels=10,
-                        batch_size=10
+                        batch_size=20
     )
     
     ''' greedy layer-wise training '''
 
-    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10)
-    #plt.title("Recon loss for DBN layers")
-    #plt.xlabel("Epoch")
-    #epochs = np.arange(10)
-    #plt.ylabel("Mean Square Reconstruction Error")
-    #label_recon = {
-    #    0: "vis--hid",
-    #    1: "hid--pen",
-    #    2: "pen+lbl--top"
-    #}
-    #for i in range(3):
-    #    plt.plot(epochs, layer_list[i], label=label_recon[i])
+    recon_list = dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10)
 
-    #plt.legend()
-    #plt.grid()
-    #plt.show()
+    layer_label = {
+        0: "vis--hid",
+        1: "hid--pen",
+        2: "pen+lbl--top"
+    }
 
+    for i in range(len(recon_list)):
+        plt.plot([x for x in range(recon_list[i])], recon_list[i], label=layer_label[i])
+    plt.grid()
+    plt.xlabel("Epoch")
+    plt.ylabel("Reconstruction MSE")
+    plt.legend()
+    plt.show()
+
+    # RECOGNIZE WORKS GREAT!
     # dbn.recognize(train_imgs, train_lbls)
     
-    dbn.recognize(test_imgs, test_lbls)
+    # dbn.recognize(test_imgs, test_lbls)
 
     for digit in range(10):
         digit_1hot = np.zeros(shape=(1,10))
-        digit_1hot[0,digit] = 1
+        digit_1hot[0, digit] = 1
         dbn.generate(digit_1hot, name="rbms")
-
+"""
     ''' fine-tune wake-sleep training '''
 
     dbn.train_wakesleep_finetune(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10000)
@@ -74,3 +79,4 @@ if __name__ == "__main__":
         digit_1hot = np.zeros(shape=(1,10))
         digit_1hot[0,digit] = 1
         dbn.generate(digit_1hot, name="dbn")
+"""
