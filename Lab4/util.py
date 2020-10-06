@@ -137,3 +137,9 @@ def plot_image(img, pred):
     plt.title(f"Predicted {int(pred)}")
     plt.imshow(img.reshape(28, 28))
     plt.show()
+
+
+def plot_image_no_lbl(img):
+    plt.title("Image reconstructed")
+    plt.imshow(img.reshape(28, 28))
+    plt.show()

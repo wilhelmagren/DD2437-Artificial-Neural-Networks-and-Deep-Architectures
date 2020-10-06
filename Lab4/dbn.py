@@ -42,9 +42,9 @@ class DeepBeliefNet():
 
         self.batch_size = batch_size
         
-        self.n_gibbs_recog = 15
+        self.n_gibbs_recog = 10
         
-        self.n_gibbs_gener = 200
+        self.n_gibbs_gener = 1000
         
         self.n_gibbs_wakesleep = 5
 
@@ -52,7 +52,7 @@ class DeepBeliefNet():
         
         return
 
-    def recognize(self,true_img,true_lbl):
+    def recognize(self, true_img, true_lbl):
 
         """Recognize/Classify the data into label categories and calculate the accuracy
 
@@ -97,20 +97,19 @@ class DeepBeliefNet():
         for predicted in predicted_lbl:
             predicted_list.append(np.where(predicted == 1)[0])
 
-        for idx, img in enumerate(true_img):
-            plot_image(img, np.array(predicted_list[idx]))
-
+        #for idx, img in enumerate(true_img):
+        #    plot_image(img, np.array(predicted_list[idx]))
         print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
         return
 
-    def generate(self, true_lbl, name):
+    def generate(self, true_lbl, name, it=0):
 
         """Generate data from labels
         Args:
           true_lbl: true labels shaped (number of samples, size of label layer)
           name: string used for saving a video of generated visible activations
         """
-        print('generate')
+        print(f'### -- Generate movie {it} -- ###')
 
         n_sample = true_lbl.shape[0]
         n_labels = true_lbl.shape[1]
@@ -122,24 +121,41 @@ class DeepBeliefNet():
         ax.set_yticks([])
 
         lbl = true_lbl
+
+        # RANDOMIZED v_0
         random_img = np.random.randn(n_sample, self.sizes['vis'])
-        hidOut = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
-        penOut = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidOut)[1]
-        lblIn = np.concatenate((penOut, lbl), axis=1)
+        # THRESHOLD THE RANDOM IMAGE
+        random_img[random_img > 0] = 1
+        random_img[random_img <= 0] = 0
+        # get sampling of hidden from v_0
+        h_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
 
-        for _ in range(self.n_gibbs_gener):
-            lblOut = self.rbm_stack['pen+lbl--top'].get_h_given_v(lblIn)[1]
-            lblIn = self.rbm_stack['pen+lbl--top'].get_v_given_h(lblOut)[1]
-            lblIn[:, -n_labels:] = lbl[:, :]
-            pen = lblIn[:, :-n_labels]
+        # GO up, to pen and get sample out
+        pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(h_out)[1]
+
+        # Concatenate pen-out with lbl
+        lbl_in = np.concatenate((pen_out, lbl), axis=1)
+
+        # now we are in top layer we need to go back in time DOC
+        for idx in range(self.n_gibbs_gener):
+            # Get top sampling
+            lbl_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_in)[1]
+            # Get lbl+pen sampling, FROM the topsampling - go DOWN
+            lbl_in = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_out)[1]
+            # the n_labels last columns, which are lbls, put the lbls there?
+            lbl_in[:, -n_labels:] = lbl[:, :]
+            # GET THE SAMPLES for pen-layer WITHOUT lbls
+            pen = lbl_in[:, :-n_labels]
+
+            # GET hid layer sampling
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
+            # Get visualay layer sampling. maybe we can display image here? Pog
+            # THIS SHOULD BE A PRODUCED IMAGE - CURRENTLY ONLY A DOT lol
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
-
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
-
         import matplotlib.animation as animation
-        FFwriter = animation.FFMpegWriter(fps=10, extra_args=['-vcodec', 'libx264'])
+        FFwriter = animation.FFMpegWriter(fps=20, extra_args=['-vcodec', 'libx264'])
         anim = stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)), writer=FFwriter)
         return
 

@@ -96,9 +96,9 @@ class RestrictedBoltzmannMachine():
 
                 # Negative phase
                 _, v_k = self.get_v_given_h(h_0)
-                h_pk, h_k = self.get_h_given_v(v_k)
+                _, h_k = self.get_h_given_v(v_k)
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
-                self.update_params(v_0, h_0, v_k, h_pk)
+                self.update_params(v_0, h_0, v_k, h_k)
             # visualize every epoch when visible layer is input images
             # viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=epoch, grid=self.rf["grid"])
 

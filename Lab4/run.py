@@ -65,7 +65,8 @@ if __name__ == "__main__":
     for digit in range(10):
         digit_1hot = np.zeros(shape=(1,10))
         digit_1hot[0, digit] = 1
-        dbn.generate(digit_1hot, name="rbms")
+        print(digit_1hot)
+        dbn.generate(digit_1hot, "rbms", digit)
 """
     ''' fine-tune wake-sleep training '''
 
