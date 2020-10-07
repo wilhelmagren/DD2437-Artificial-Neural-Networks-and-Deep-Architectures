@@ -140,6 +140,6 @@ def plot_image(img, pred):
 
 
 def plot_image_no_lbl(img):
-    plt.title("Image reconstructed")
+    plt.title("Original image")
     plt.imshow(img.reshape(28, 28))
     plt.show()

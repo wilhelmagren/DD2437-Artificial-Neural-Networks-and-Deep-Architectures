@@ -9,18 +9,18 @@ if __name__ == "__main__":
 
     ''' restricted boltzmann machine '''
     
-    # print ("\nStarting a Restricted Boltzmann Machine..")
+    #print ("\nStarting a Restricted Boltzmann Machine..")
 
-    # rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
-    #                                 ndim_hidden=500,
-    #                                 is_bottom=True,
-    #                                 image_size=image_size,
-    #                                 is_top=False,
-    #                                 n_labels=10,
-    #                                 batch_size=10
-    #)
+    rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
+                                     ndim_hidden=500,
+                                     is_bottom=True,
+                                     image_size=image_size,
+                                     is_top=False,
+                                     n_labels=10,
+                                     batch_size=10
+    )
     
-    # loss_list = rbm.cd1(visible_trainset=train_imgs, n_iterations=10)
+    loss_list = rbm.cd1(visible_trainset=train_imgs, n_iterations=10)
 
     #plt.plot([x for x in range(len(loss_list))], loss_list, label="500 hidden units")
     #plt.xlabel("Epochs")
@@ -50,6 +50,7 @@ if __name__ == "__main__":
     }
 
     for i in range(len(recon_list)):
+        it = [x for x in range(1, len(recon_list[i]) + 1)]
         plt.plot(it, recon_list[i], label=layer_label[i])
     plt.grid()
     plt.xlabel("Epoch")
@@ -58,8 +59,9 @@ if __name__ == "__main__":
     plt.show()
 
     # RECOGNIZE WORKS GREAT!
+    print(f" ### -- DBN recognize with training data -- ###")
     dbn.recognize(train_imgs, train_lbls)
-    
+    print(f" ### -- DBN recognize with test data -- ###")
     dbn.recognize(test_imgs, test_lbls)
 
     for digit in range(10):

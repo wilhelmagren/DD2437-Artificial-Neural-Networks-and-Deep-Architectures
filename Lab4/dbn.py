@@ -44,7 +44,7 @@ class DeepBeliefNet():
         
         self.n_gibbs_recog = 10
         
-        self.n_gibbs_gener = 1000
+        self.n_gibbs_gener = 500
         
         self.n_gibbs_wakesleep = 5
 
@@ -71,11 +71,11 @@ class DeepBeliefNet():
         # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
         # NOTE : inferring entire train/test set may require too much compute memory (depends on your system). In that case, divide into mini-batches.
 
-        print("### vis -- hid ###")
+        #print("### vis -- hid ###")
         # Retrieve h-sample from the true images
         h_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
 
-        print("### hid -- pen ###")
+        #print("### hid -- pen ###")
         # Retrieve pen-sample from h_out
         pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(h_out)[1]
         # concatenate the pen sampling with the labels
@@ -85,7 +85,7 @@ class DeepBeliefNet():
         # pen_lbl_in = []
 
         for idx in range(self.n_gibbs_recog):
-            print(f"### pen+lbl -- top {idx+1} ###")
+            #print(f"### pen+lbl -- top {idx+1} ###")
             # Calculate and retrieve the top output samples
             top_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(pen_lbl)[1]
             # Calculate the visible layer output given the hidden layer samples
@@ -150,7 +150,6 @@ class DeepBeliefNet():
             # GET hid layer sampling
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             # Get visualay layer sampling. maybe we can display image here? Pog
-            # THIS SHOULD BE A PRODUCED IMAGE - CURRENTLY ONLY A DOT lol
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])

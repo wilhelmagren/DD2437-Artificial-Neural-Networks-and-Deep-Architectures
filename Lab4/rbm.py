@@ -65,8 +65,7 @@ class RestrictedBoltzmannMachine():
         
         return
 
-        
-    def cd1(self,visible_trainset, n_iterations=10000):
+    def cd1(self, visible_trainset, n_iterations=10):
         
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -76,7 +75,7 @@ class RestrictedBoltzmannMachine():
         """
 
         print ("learning CD1")
-        
+        plot_image_no_lbl(visible_trainset[0])
         n_samples = visible_trainset.shape[0]
         swifty_swipe = int(n_samples/self.batch_size)
         recon_loss = []
@@ -103,14 +102,20 @@ class RestrictedBoltzmannMachine():
             # viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=epoch, grid=self.rf["grid"])
 
             # Calculate recon loss for cur epoch
+            plot_image_no_lbl(visible_trainset[0])
             _, h_0temp = self.get_h_given_v(visible_trainset)
             _, v_ktemp = self.get_v_given_h(h_0temp)
+            plot_image_no_lbl(v_ktemp[0])
             r_loss = np.sum(((visible_trainset - v_ktemp)**2)/n_samples)
             # print progress
             print("epoch=%7d recon_loss MSE=%4.4f" % (epoch + 1, r_loss))
             recon_loss.append(r_loss)
+        plot_image_no_lbl(visible_trainset[0])
+        # RECALL
+        _, h_recall = self.get_h_given_v(visible_trainset)
+        _, v_recall = self.get_v_given_h(h_recall)
+        plot_image_no_lbl(v_recall[0])
         return recon_loss
-    
 
     def update_params(self,v_0,h_0,v_k,h_k):
 
